@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sleeper League Snapshot</title>
+<style>
+  :root { color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#111318; color:#f3f4f6; }
+  .wrap { max-width:1500px; margin:26px auto; padding:0 18px 50px; }
+  h1 { margin:0 0 5px; font-size:28px; }
+  h2 { margin:28px 0 10px; }
+  h3 { margin:0; font-size:16px; }
+  .sub,.muted { color:#9ea5b1; }
+  .private-note { margin:12px 0 18px; padding:10px 12px; border:1px solid #3a404c; background:#171b22; border-radius:8px; font-size:12px; color:#c7ccd5; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin:18px 0; }
+  .control { min-width:180px; }
+  label { display:block; margin-bottom:5px; color:#aeb4bf; font-size:12px; }
+  select,button,input { padding:9px 11px; border:1px solid #343944; border-radius:8px; background:#1a1e26; color:#fff; font-size:14px; }
+  button { cursor:pointer; font-weight:700; background:#2b6ef3; border-color:#2b6ef3; }
+  button.secondary { background:#222833; border-color:#3a404c; }
+  button:hover { filter:brightness(1.08); }
+  .check { display:flex; align-items:center; gap:8px; min-height:38px; }
+  .check input { width:18px; height:18px; accent-color:#7c6cff; }
+  .status { margin:8px 0 16px; color:#c7ccd5; }
+  .league { margin-top:24px; }
+  .league-head { display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:10px; }
+  .teams { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .team-card { border:1px solid #303540; border-radius:10px; background:#171b22; overflow:hidden; }
+  .team-head { padding:12px 14px; background:#1b1f27; border-bottom:1px solid #303540; }
+  .team-meta { color:#9ea5b1; font-size:12px; margin-top:4px; }
+  .position-group { padding:9px 14px; border-bottom:1px solid #252a33; }
+  .position-group:last-child { border-bottom:0; }
+  .position-label { color:#8eb0ff; font-size:11px; font-weight:800; letter-spacing:.05em; margin-bottom:5px; }
+  .player-head,.player { display:grid; grid-template-columns:minmax(180px,1fr) 58px 70px 70px 60px; gap:8px; align-items:center; }
+  .player-head { color:#8f96a3; font-size:10px; text-transform:uppercase; padding-bottom:4px; }
+  .player { padding:3px 0; font-size:12px; }
+  .player .name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .starter { color:#55d187; font-weight:800; }
+  .reserve { color:#f6c453; font-weight:800; }
+  .available { margin-top:14px; border:1px solid #303540; border-radius:10px; overflow:hidden; }
+  .available-head { padding:10px 12px; background:#1b1f27; font-weight:800; }
+  .available-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .available-col { padding:10px 12px; border-right:1px solid #252a33; border-bottom:1px solid #252a33; }
+  .available-col:nth-child(4n) { border-right:0; }
+  .available-col h4 { margin:0 0 7px; color:#8eb0ff; }
+  .avail-row { font-size:12px; padding:3px 0; }
+  .legend { font-size:11px; color:#8f96a3; margin:7px 0 10px; }
+  textarea { position:fixed; left:-9999px; top:-9999px; }
+  @media(max-width:1000px){
+    .teams { grid-template-columns:1fr; }
+    .available-grid { grid-template-columns:1fr 1fr; }
+    .available-col:nth-child(4n) { border-right:1px solid #252a33; }
+    .available-col:nth-child(2n) { border-right:0; }
+  }
+  @media(max-width:620px){
+    .player-head,.player { grid-template-columns:minmax(140px,1fr) 48px 58px 58px; }
+    .player-head .flag,.player .flag { display:none; }
+    .available-grid { grid-template-columns:1fr; }
+    .available-col { border-right:0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sleeper League Snapshot</h1>
+  <div class="sub">Live roster state for both leagues, formatted for quick review or copying into an analysis chat.</div>
+
+  <div class="private-note">
+    This page is intentionally <strong>unlinked</strong> from the public player-search page. It is obscured, not secured: anyone who knows this URL can still open it on GitHub Pages.
+  </div>
+
+  <div class="controls">
+    <button id="refresh">Refresh Snapshot</button>
+    <button class="secondary" id="copy0">Copy League 1</button>
+    <button class="secondary" id="copy1">Copy League 2</button>
+    <button class="secondary" id="copyBoth">Copy Both</button>
+
+    <div class="control">
+      <label>Available players</label>
+      <div class="check">
+        <input type="checkbox" id="includeAvailable">
+        <label for="includeAvailable" style="margin:0;color:#fff;font-size:14px;">Include Available Players</label>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="availLimit">Available per position</label>
+      <select id="availLimit">
+        <option>10</option>
+        <option selected>25</option>
+        <option>50</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="status" class="status">Loading…</div>
+  <div id="content"></div>
+  <textarea id="copyBuffer"></textarea>
+</div>
+
+<script>
+const LEAGUES=["1399909125441224704","1399913391677554688"];
+const API="https://api.sleeper.app/v1";
+const STATS_API="https://api.sleeper.com/stats/nfl";
+const PROJ_API="https://api.sleeper.app/v1/projections/nfl/regular";
+const POSITIONS=["QB","RB","WR","TE","DL","LB","DB"];
+
+let currentSeason=2026;
+let currentWeek=1;
+let players=new Map();
+let leagueData=[null,null];
+let weeklyStats=new Map();
+let weeklyProj=new Map();
+
+const $=id=>document.getElementById(id);
+const txt=v=>(v??"").toString().trim();
+const num=v=>{
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+};
+const esc=s=>txt(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function getJson(url){
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  return r.json();
+}
+
+function normalizeFeed(data){
+  const map=new Map();
+  const accept=(fallback,row)=>{
+    if(!row || typeof row!=="object") return;
+    const id=String(row.player_id ?? row.player?.player_id ?? row.player?.id ?? fallback ?? "");
+    if(!id) return;
+    let stats=row.stats && typeof row.stats==="object" ? {...row.stats} : {...row};
+    delete stats.player;
+    delete stats.player_id;
+    delete stats.stats;
+    map.set(id,{row,stats});
+  };
+  if(Array.isArray(data)) data.forEach(r=>accept(null,r));
+  else if(data && typeof data==="object") Object.entries(data).forEach(([id,r])=>accept(id,r));
+  return map;
+}
+
+function playerName(p){
+  return txt(p?.full_name) || `${txt(p?.first_name)} ${txt(p?.last_name)}`.trim() || "Unknown";
+}
+
+function positionGroup(p){
+  const primary=txt(p?.position).toUpperCase();
+  const fp=Array.isArray(p?.fantasy_positions)?p.fantasy_positions.map(x=>txt(x).toUpperCase()):[];
+  const raw=[primary,...fp];
+
+  for(const pos of ["QB","RB","WR","TE"]) if(raw.includes(pos)) return pos;
+  if(raw.some(x=>["DL","DE","DT","NT"].includes(x))) return "DL";
+  if(raw.some(x=>["LB","ILB","OLB","MLB"].includes(x))) return "LB";
+  if(raw.some(x=>["DB","CB","S","FS","SS"].includes(x))) return "DB";
+  return null;
+}
+
+function supportedPlayer(p){
+  return !!positionGroup(p);
+}
+
+function statValue(stats,key,p){
+  if(Object.prototype.hasOwnProperty.call(stats,key)) return num(stats[key]);
+  const aliases={
+    idp_qbhit:["idp_qb_hit"],
+    idp_qb_hit:["idp_qbhit"],
+    idp_pd:["idp_pass_def"],
+    idp_pass_def:["idp_pd"]
+  };
+  for(const a of aliases[key]||[]){
+    if(Object.prototype.hasOwnProperty.call(stats,a)) return num(stats[a]);
+  }
+
+  const primary=txt(p?.position).toUpperCase();
+  const fpos=Array.isArray(p?.fantasy_positions)?p.fantasy_positions.map(x=>txt(x).toUpperCase()):[];
+  const isPos=x=>primary===x||fpos.includes(x);
+  if(key==="bonus_rec_te" && isPos("TE")) return num(stats.rec);
+  if(key==="bonus_rec_rb" && isPos("RB")) return num(stats.rec);
+  if(key==="bonus_rec_wr" && isPos("WR")) return num(stats.rec);
+  if(key==="bonus_rush_att" && isPos("RB")) return num(stats.rush_att);
+  return 0;
+}
+
+function entryPlayed(entry){
+  if(!entry) return false;
+  const stats=entry.stats||{};
+  const row=entry.row||{};
+  if(Object.prototype.hasOwnProperty.call(stats,"gp")) return num(stats.gp)>0;
+  if(Object.prototype.hasOwnProperty.call(row,"gp")) return num(row.gp)>0;
+
+  const participationKeys=[
+    "off_snp","def_snp","st_snp","snap_pct",
+    "pass_att","rush_att","rec_tgt","targets","tgt",
+    "idp_tkl_solo","tkl_solo","idp_tkl_ast","tkl_ast",
+    "idp_sack","sack","idp_int","def_int"
+  ];
+  return participationKeys.some(key=>
+    (Object.prototype.hasOwnProperty.call(stats,key) && num(stats[key])>0) ||
+    (Object.prototype.hasOwnProperty.call(row,key) && num(row[key])>0)
+  );
+}
+
+function calcPoints(id,map,scoring,projection=false){
+  const entry=map.get(String(id));
+  if(!entry) return null;
+
+  const p=players.get(String(id))||{};
+  const stats=entry.stats||{};
+  let total=0;
+  let used=false;
+
+  for(const [key,wRaw] of Object.entries(scoring||{})){
+    const w=num(wRaw);
+    if(w===0) continue;
+    const v=statValue(stats,key,p);
+    if(v!==0 || Object.prototype.hasOwnProperty.call(stats,key)){
+      total += w*v;
+      used=true;
+    }
+  }
+  if(used) return Math.round(total*100)/100;
+
+  const row=entry.row||{};
+  for(const k of ["pts_half_ppr","pts_ppr","pts_std"]){
+    if(row[k]!=null) return num(row[k]);
+    if(stats[k]!=null) return num(stats[k]);
+  }
+
+  if(!projection && entryPlayed(entry)) return 0;
+  return null;
+}
+
+function seasonAverage(id,scoring){
+  const vals=[];
+  for(let w=1;w<=currentWeek;w++){
+    const map=weeklyStats.get(w)||new Map();
+    const entry=map.get(String(id));
+    if(!entryPlayed(entry)) continue;
+    const v=calcPoints(id,map,scoring,false);
+    vals.push(v==null?0:v);
+  }
+  if(!vals.length) return null;
+  return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*100)/100;
+}
+
+function weekProjection(id,scoring){
+  return calcPoints(id,weeklyProj,scoring,true);
+}
+
+function fmt(v){
+  return v==null?"—":Number(v).toFixed(2);
+}
+
+function rosterPoints(settings){
+  return num(settings?.fpts)+(num(settings?.fpts_decimal)/100);
+}
+
+function faabRemaining(league,roster){
+  const budget=num(league?.settings?.waiver_budget);
+  const used=num(roster?.settings?.waiver_budget_used);
+  return budget>0 ? budget-used : null;
+}
+
+async function loadLeague(index,id){
+  const [league,rosters,users]=await Promise.all([
+    getJson(`${API}/league/${id}`),
+    getJson(`${API}/league/${id}/rosters`),
+    getJson(`${API}/league/${id}/users`)
+  ]);
+
+  const usersById=new Map((users||[]).map(u=>[
+    String(u.user_id),
+    {
+      display:txt(u.display_name)||txt(u.username)||"Unknown",
+      team:txt(u.metadata?.team_name)
+    }
+  ]));
+
+  leagueData[index]={league,rosters:rosters||[],usersById};
+}
+
+async function fetchProjection(){
+  try{
+    return await getJson(`${PROJ_API}/${currentSeason}/${currentWeek}`);
+  }catch(e){
+    return await getJson(`https://api.sleeper.com/projections/nfl/${currentSeason}/${currentWeek}?season_type=regular`);
+  }
+}
+
+async function refresh(){
+  $("status").textContent="Loading live Sleeper league snapshot…";
+  try{
+    const statePromise=getJson(`${API}/state/nfl`);
+    const playerPromise=getJson(`${API}/players/nfl`);
+    const leaguePromises=[loadLeague(0,LEAGUES[0]),loadLeague(1,LEAGUES[1])];
+    const [state,playerMap]=await Promise.all([statePromise,playerPromise,...leaguePromises]);
+
+    currentSeason=Number(state.season)||2026;
+    currentWeek=Number(state.week)||1;
+    players=new Map(Object.entries(playerMap||{}).map(([id,p])=>[String(id),{player_id:String(id),...p}]));
+
+    weeklyStats=new Map();
+    for(let w=1;w<=currentWeek;w++){
+      try{
+        const data=await getJson(`${STATS_API}/${currentSeason}/${w}?season_type=regular`);
+        weeklyStats.set(w,normalizeFeed(data));
+      }catch(e){
+        console.warn(`Week ${w} stats unavailable:`,e);
+        weeklyStats.set(w,new Map());
+      }
+    }
+
+    weeklyProj=normalizeFeed(await fetchProjection());
+    render();
+    $("copy0").textContent=`Copy ${leagueData[0]?.league?.name||"League 1"}`;
+    $("copy1").textContent=`Copy ${leagueData[1]?.league?.name||"League 2"}`;
+    $("status").textContent=`NFL ${currentSeason} · Week ${currentWeek} · refreshed ${new Date().toLocaleString()}`;
+  }catch(e){
+    console.error(e);
+    $("status").textContent="Could not load snapshot: "+e.message;
+  }
+}
+
+function teamLabel(info,roster){
+  const u=info.usersById.get(String(roster.owner_id))||{display:"Unknown",team:""};
+  return u.team ? `${u.team} (${u.display})` : u.display;
+}
+
+function rosterFlags(roster,id){
+  const starter=(roster.starters||[]).map(String).includes(String(id));
+  const reserve=(roster.reserve||[]).map(String).includes(String(id));
+  return {starter,reserve};
+}
+
+function groupedRoster(info,roster){
+  const groups=Object.fromEntries(POSITIONS.map(p=>[p,[]]));
+  for(const id of roster.players||[]){
+    const p=players.get(String(id));
+    const group=positionGroup(p);
+    if(!group) continue;
+    groups[group].push({id:String(id),p,flags:rosterFlags(roster,id)});
+  }
+  for(const group of POSITIONS){
+    groups[group].sort((a,b)=>{
+      if(a.flags.starter!==b.flags.starter) return a.flags.starter?-1:1;
+      if(a.flags.reserve!==b.flags.reserve) return a.flags.reserve?1:-1;
+      return playerName(a.p).localeCompare(playerName(b.p));
+    });
+  }
+  return groups;
+}
+
+function renderPlayerRow(item,scoring){
+  const p=item.p;
+  const avg=seasonAverage(item.id,scoring);
+  const proj=weekProjection(item.id,scoring);
+  const flag=item.flags.reserve
+    ? `<span class="reserve">IR</span>`
+    : item.flags.starter
+      ? `<span class="starter">S</span>`
+      : "";
+
+  return `<div class="player">
+    <div class="name">${esc(playerName(p))}</div>
+    <div>${esc(txt(p?.team)||"FA")}</div>
+    <div title="Season average">${fmt(avg)}</div>
+    <div title="Week ${currentWeek} projection">${fmt(proj)}</div>
+    <div class="flag">${flag}</div>
+  </div>`;
+}
+
+function renderLeague(index){
+  const info=leagueData[index];
+  if(!info) return "";
+  const scoring=info.league.scoring_settings||{};
+
+  const cards=info.rosters.map(roster=>{
+    const s=roster.settings||{};
+    const record=`${num(s.wins)}-${num(s.losses)}${num(s.ties)?`-${num(s.ties)}`:""}`;
+    const faab=faabRemaining(info.league,roster);
+    const groups=groupedRoster(info,roster);
+
+    const body=POSITIONS.map(pos=>{
+      const list=groups[pos];
+      if(!list.length) return "";
+      return `<div class="position-group">
+        <div class="position-label">${pos}</div>
+        <div class="player-head"><div>Player</div><div>NFL</div><div>Avg</div><div>W${currentWeek} Proj</div><div class="flag">Slot</div></div>
+        ${list.map(item=>renderPlayerRow(item,scoring)).join("")}
+      </div>`;
+    }).join("");
+
+    return `<div class="team-card">
+      <div class="team-head">
+        <h3>${esc(teamLabel(info,roster))}</h3>
+        <div class="team-meta">
+          ${record} · ${rosterPoints(s).toFixed(2)} PF${faab==null?"":` · $${faab} FAAB`}
+        </div>
+      </div>
+      ${body}
+    </div>`;
+  }).join("");
+
+  return `<section class="league">
+    <div class="league-head">
+      <h2>${esc(info.league.name||`League ${index+1}`)}</h2>
+      <div class="muted">${info.rosters.length} teams</div>
+    </div>
+    <div class="legend">Avg = season fantasy points per game played using this league's scoring. S = starter; IR = reserve.</div>
+    <div class="teams">${cards}</div>
+    ${$("includeAvailable").checked ? renderAvailable(index) : ""}
+  </section>`;
+}
+
+function availablePlayers(index){
+  const info=leagueData[index];
+  if(!info) return [];
+  const owned=new Set();
+  for(const roster of info.rosters){
+    for(const id of roster.players||[]) owned.add(String(id));
+  }
+
+  return [...players.values()]
+    .filter(p=>supportedPlayer(p))
+    .filter(p=>!owned.has(String(p.player_id)))
+    .filter(p=>txt(p.team))
+    .filter(p=>p.active!==false);
+}
+
+function renderAvailable(index){
+  const info=leagueData[index];
+  const scoring=info.league.scoring_settings||{};
+  const limit=Number($("availLimit").value)||25;
+  const rows=availablePlayers(index);
+
+  const cols=POSITIONS.map(pos=>{
+    const vals=rows
+      .filter(p=>positionGroup(p)===pos)
+      .map(p=>({p,proj:weekProjection(String(p.player_id),scoring),avg:seasonAverage(String(p.player_id),scoring)}))
+      .sort((a,b)=>{
+        const ap=a.proj==null?-999999:a.proj;
+        const bp=b.proj==null?-999999:b.proj;
+        if(bp!==ap) return bp-ap;
+        return playerName(a.p).localeCompare(playerName(b.p));
+      })
+      .slice(0,limit);
+
+    return `<div class="available-col">
+      <h4>${pos}</h4>
+      ${vals.length ? vals.map(x=>
+        `<div class="avail-row">${esc(playerName(x.p))} (${esc(txt(x.p.team)||"FA")}) · avg ${fmt(x.avg)} · proj ${fmt(x.proj)}</div>`
+      ).join("") : `<div class="muted">None</div>`}
+    </div>`;
+  }).join("");
+
+  return `<div class="available">
+    <div class="available-head">Available Players — top ${limit} per position by Week ${currentWeek} projection</div>
+    <div class="available-grid">${cols}</div>
+  </div>`;
+}
+
+function render(){
+  $("content").innerHTML=[0,1].map(renderLeague).join("");
+}
+
+function textForLeague(index){
+  const info=leagueData[index];
+  if(!info) return "";
+  const scoring=info.league.scoring_settings||{};
+  const lines=[];
+
+  lines.push(`${info.league.name||`League ${index+1}`} — NFL ${currentSeason} Week ${currentWeek}`);
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  lines.push("");
+
+  for(const roster of info.rosters){
+    const s=roster.settings||{};
+    const faab=faabRemaining(info.league,roster);
+    const record=`${num(s.wins)}-${num(s.losses)}${num(s.ties)?`-${num(s.ties)}`:""}`;
+    lines.push(`${teamLabel(info,roster)} | ${record} | ${rosterPoints(s).toFixed(2)} PF${faab==null?"":` | $${faab} FAAB`}`);
+
+    const groups=groupedRoster(info,roster);
+    for(const pos of POSITIONS){
+      if(!groups[pos].length) continue;
+      const entries=groups[pos].map(item=>{
+        const p=item.p;
+        const avg=seasonAverage(item.id,scoring);
+        const proj=weekProjection(item.id,scoring);
+        const flag=item.flags.reserve?" [IR]":item.flags.starter?" [S]":"";
+        return `${playerName(p)} (${txt(p?.team)||"FA"}) avg ${fmt(avg)} / W${currentWeek} proj ${fmt(proj)}${flag}`;
+      });
+      lines.push(`  ${pos}: ${entries.join("; ")}`);
+    }
+    lines.push("");
+  }
+
+  if($("includeAvailable").checked){
+    const limit=Number($("availLimit").value)||25;
+    const rows=availablePlayers(index);
+    lines.push(`AVAILABLE PLAYERS — top ${limit} per position by Week ${currentWeek} projection`);
+    for(const pos of POSITIONS){
+      const vals=rows
+        .filter(p=>positionGroup(p)===pos)
+        .map(p=>({p,proj:weekProjection(String(p.player_id),scoring),avg:seasonAverage(String(p.player_id),scoring)}))
+        .sort((a,b)=>(b.proj??-999999)-(a.proj??-999999))
+        .slice(0,limit);
+      lines.push(`  ${pos}: ${vals.map(x=>`${playerName(x.p)} (${txt(x.p.team)||"FA"}) avg ${fmt(x.avg)} / W${currentWeek} proj ${fmt(x.proj)}`).join("; ")}`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+async function copyText(value,label){
+  try{
+    await navigator.clipboard.writeText(value);
+  }catch(e){
+    const ta=$("copyBuffer");
+    ta.value=value;
+    ta.select();
+    document.execCommand("copy");
+  }
+  $("status").textContent=`${label} copied to clipboard · NFL ${currentSeason} Week ${currentWeek}`;
+}
+
+$("refresh").addEventListener("click",refresh);
+$("copy0").addEventListener("click",()=>copyText(textForLeague(0),leagueData[0]?.league?.name||"League 1"));
+$("copy1").addEventListener("click",()=>copyText(textForLeague(1),leagueData[1]?.league?.name||"League 2"));
+$("copyBoth").addEventListener("click",()=>copyText(`${textForLeague(0)}\n\n==============================\n\n${textForLeague(1)}`,"Both leagues"));
+$("includeAvailable").addEventListener("change",render);
+$("availLimit").addEventListener("change",render);
+
+refresh();
+</script>
+</body>
+</html>

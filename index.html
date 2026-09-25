@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sleeper Full Player Search + Projections</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#111318; color:#f3f4f6; }
+  .wrap { max-width:1500px; margin:26px auto; padding:0 18px 40px; }
+  h1 { margin:0 0 6px; font-size:28px; }
+  .sub { color:#aeb4bf; margin-bottom:20px; }
+  .controls { display:grid; grid-template-columns:repeat(4,minmax(170px,1fr)); gap:12px; }
+  label { display:block; margin-bottom:5px; color:#aeb4bf; font-size:12px; }
+  select,input,button { width:100%; padding:10px 11px; border:1px solid #343944; border-radius:8px; background:#1a1e26; color:#fff; font-size:14px; }
+  button { cursor:pointer; font-weight:700; background:#2b6ef3; border-color:#2b6ef3; }
+  button:hover { filter:brightness(1.08); }
+  .toolbar { display:grid; grid-template-columns:190px 180px 1fr; gap:12px; margin:12px 0 14px; align-items:end; }
+  .status { min-height:20px; color:#c7ccd5; font-size:14px; padding-bottom:2px; }
+  .tablebox { overflow:auto; border:1px solid #303540; border-radius:10px; max-height:72vh; }
+  table { width:100%; border-collapse:collapse; min-width:1500px; }
+  th,td { padding:10px 11px; border-bottom:1px solid #2b3039; text-align:left; font-size:13px; white-space:nowrap; }
+  th { position:sticky; top:0; z-index:2; background:#1b1f27; color:#cfd4dd; }
+  th.sortable { cursor:pointer; user-select:none; }
+  th.sortable:hover { background:#242a34; color:#fff; }
+  .sortmark { display:inline-block; min-width:12px; margin-left:4px; color:#8eb0ff; font-size:11px; }
+  tbody tr:hover { background:#171b22; }
+  .fa { color:#55d187; font-weight:800; }
+  .waiver { color:#f6c453; font-weight:800; }
+  .checkrow { display:flex; align-items:center; gap:9px; min-height:42px; padding:0 2px; }
+  .checkrow input[type="checkbox"] { width:18px; height:18px; margin:0; accent-color:#7c6cff; }
+  .checkrow label { margin:0; font-size:14px; color:#f3f4f6; cursor:pointer; }
+  .helper { display:block; font-size:11px; color:#8f96a3; margin-top:4px; }
+  .multi { position:relative; }
+  .multi-btn { text-align:left; cursor:pointer; }
+  .multi-menu {
+    display:none;
+    position:absolute;
+    z-index:30;
+    top:calc(100% + 6px);
+    left:0;
+    right:0;
+    max-height:320px;
+    overflow:auto;
+    padding:8px;
+    border:1px solid #3a404c;
+    border-radius:8px;
+    background:#171b22;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .multi.open .multi-menu { display:block; }
+  .multi-group {
+    padding:8px 6px 4px;
+    font-size:11px;
+    color:#8f96a3;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .multi-option {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 6px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .multi-option:hover { background:#222833; }
+  .multi-option input { width:16px; height:16px; margin:0; }
+  .multi-option span { font-size:13px; }
+  .multi-actions {
+    display:flex;
+    gap:8px;
+    padding:6px;
+    border-bottom:1px solid #303540;
+    margin-bottom:4px;
+  }
+  .multi-actions button {
+    padding:6px 8px;
+    font-size:12px;
+    background:#222833;
+    border-color:#3a404c;
+  }
+  .position-actions { flex-wrap:wrap; }
+  .position-actions button { flex:1 1 58px; min-width:58px; }
+  .trend-up { color:#55d187; font-weight:800; }
+  .trend-down { color:#ff7a7a; font-weight:800; }
+  .owned { color:#ff7a7a; font-weight:700; }
+  .proj { font-weight:800; font-variant-numeric:tabular-nums; }
+  .muted { color:#8f96a3; }
+  .tag { display:inline-block; padding:2px 7px; border:1px solid #454b57; border-radius:999px; font-size:11px; }
+  .note { margin-top:14px; color:#9ea5b1; font-size:12px; line-height:1.5; }
+  .count { font-weight:700; color:#fff; }
+  .pagination {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin:14px 0 4px;
+    flex-wrap:wrap;
+  }
+  .pagination button {
+    width:auto;
+    min-width:90px;
+    padding:8px 12px;
+  }
+  .pagination button:disabled {
+    opacity:.45;
+    cursor:not-allowed;
+    filter:none;
+  }
+  .page-info {
+    color:#c7ccd5;
+    font-size:13px;
+    min-width:120px;
+    text-align:center;
+  }
+  @media(max-width:900px){
+    .controls { grid-template-columns:1fr 1fr; }
+    .toolbar { grid-template-columns:1fr 1fr; }
+    .toolbar .status { grid-column:1/-1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sleeper Full Player Search + Projections</h1>
+  <div class="sub">Player search, ownership, projections and optional Sleeper add/drop trends across both leagues.</div>
+
+  <div class="controls">
+    <div>
+      <label for="search">Player name</label>
+      <input id="search" placeholder="e.g. Christian Watson">
+    </div>
+
+    <div class="multi" id="positionWrap">
+      <label>Position(s)</label>
+      <button type="button" class="multi-btn" id="positionBtn">All positions</button>
+      <div class="multi-menu" id="positionMenu">
+        <div class="multi-actions position-actions">
+          <button type="button" data-pos-preset="ALL">All</button>
+          <button type="button" data-pos-preset="FLEX">FLEX</button>
+          <button type="button" data-pos-preset="SUPERFLEX">SUPERFLEX</button>
+          <button type="button" data-pos-preset="IDP">IDP</button>
+          <button type="button" data-pos-preset="CLEAR">Clear</button>
+        </div>
+        <div id="positionOptions"></div>
+      </div>
+      <span class="helper">Choose any combination. Presets are shortcuts, not separate positions.</span>
+    </div>
+
+    <div>
+      <label for="nflTeam">NFL team</label>
+      <select id="nflTeam"><option value="ALL">All teams</option></select>
+    </div>
+
+    <div>
+      <label for="poolStatus">Player pool</label>
+      <select id="poolStatus">
+        <option value="all">All Players</option>
+        <option value="available" selected>All Available</option>
+        <option value="fa">Free Agents Only</option>
+        <option value="waiver">Waivers Only</option>
+        <option value="owned">Owned Only</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Include player pool</label>
+      <div class="checkrow">
+        <input type="checkbox" id="includePool" checked>
+        <label for="includePool">Include player pool in results</label>
+      </div>
+    </div>
+
+    <div>
+      <label for="leagueScope">League</label>
+      <select id="leagueScope">
+        <option value="both" selected>Both Leagues</option>
+        <option value="0">League 1</option>
+        <option value="1">League 2</option>
+      </select>
+    </div>
+
+    <div class="multi" id="includeTeamsWrap">
+      <label>Include Team(s)</label>
+      <button type="button" class="multi-btn" id="includeTeamsBtn">None selected</button>
+      <div class="multi-menu" id="includeTeamsMenu">
+        <div class="multi-actions">
+          <button type="button" id="includeTeamsClear">Clear</button>
+          <button type="button" id="includeTeamsAll">Select all</button>
+        </div>
+        <div id="includeTeamsOptions"></div>
+      </div>
+      <span class="helper">Selected teams are an independent result set. Turn off “Include player pool” to compare only the selected teams.</span>
+    </div>
+
+    <div>
+      <label for="leagueMatch">When viewing both leagues</label>
+      <select id="leagueMatch">
+        <option value="either" selected>Match either league</option>
+        <option value="both">Match both leagues</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Roster eligibility</label>
+      <div class="checkrow">
+        <input type="checkbox" id="irEligible">
+        <label for="irEligible">IR Eligible only</label>
+      </div>
+    </div>
+<div>
+      <label for="statsView">Stats View</label>
+      <select id="statsView"></select>
+    </div>
+
+    <div>
+      <label>Add/Drop trends</label>
+      <div class="checkrow">
+        <input type="checkbox" id="showTrending">
+        <label for="showTrending">Show Adds / Drops</label>
+      </div>
+    </div>
+
+    <div>
+      <label for="trendingWindow">Trending window</label>
+      <select id="trendingWindow" disabled>
+        <option value="24" selected>24 hours</option>
+        <option value="48">48 hours</option>
+        <option value="72">72 hours</option>
+        <option value="168">7 days</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="stat" selected>Selected stat</option>
+        <option value="rank">Sleeper search rank</option>
+        <option value="name">Name</option>
+        <option value="position">Position</option>
+        <option value="team">NFL team</option>
+        <option value="age">Age</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="limit">Results per page</label>
+      <select id="limit">
+        <option>25</option>
+        <option>50</option>
+        <option selected>100</option>
+        <option>250</option>
+        <option value="99999">All matches</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="refresh">Refresh Sleeper Data</button>
+    <button id="clear">Clear Filters</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead>
+        <tr id="headerRow"></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="pagination">
+    <button type="button" id="prevPage">← Previous</button>
+    <div class="page-info" id="pageInfo">Page 1 of 1</div>
+    <button type="button" id="nextPage">Next →</button>
+  </div>
+
+  <div class="note">
+    <strong>Player Pool works like Yahoo:</strong> All Players, All Available, Free Agents Only, Waivers Only, or Owned Only. <strong>Include player pool</strong> and <strong>Include Team(s)</strong> are independent. Leave the pool on to compare selected teams against All Available/FA/Waivers/etc.; turn the pool off to compare only the selected teams.
+    <strong>League</strong> and <strong>Match either/both</strong> are separate, so you can keep the cross-league searches.
+    <strong>IR Eligible only</strong> uses each league's actual reserve eligibility settings and the player's current Sleeper designation.
+    Free-agent vs waiver status is a <strong>best-effort reconstruction</strong> because Sleeper's public API does not expose a single authoritative player-pool-status field; this page combines roster ownership, pending waiver transactions, recent drops, current NFL game status, and the leagues' Tuesday lock behavior.
+    Kickers and team DEF/DST are excluded from the player universe. Position(s) supports any combination of QB/RB/WR/TE/DL/LB/DB, with FLEX/SUPERFLEX/IDP presets. Stats View changes the displayed stat line Yahoo-style. Average views use games played: a played 0 counts, while bye/DNP/inactive weeks do not. Stat-category columns adapt to the selected positions. Rostered % uses Sleeper's undocumented research feed. Optional Adds/Drops use Sleeper's official trending endpoint; counts are Sleeper-wide for the selected lookback window, and “—” means the player was outside the returned trending set rather than a confirmed zero. Trending data attribution: Sleeper.
+  </div>
+</div>
+
+<script>
+const LEAGUES = ["1399909125441224704","1399913391677554688"];
+const API = "https://api.sleeper.app/v1";
+const PROJ_API = "https://api.sleeper.app/v1/projections/nfl/regular";
+const STATS_API = "https://api.sleeper.com/stats/nfl";
+
+let allPlayers = [];
+let playerById = new Map();
+let leagueNames = ["League 1","League 2"];
+let sharedScoring = {};
+let ownership = [new Map(),new Map()];
+let leagueSettings = [{},{}];
+let recentDrops = [new Map(),new Map()];
+let pendingWaiverAdds = [new Set(),new Set()];
+let gameStateByTeam = new Map();
+let waiverContextLoaded = false;
+let rosterOptions = [[],[]];
+let selectedRosterKeys = new Set();
+const POSITION_CHOICES = ["QB","RB","WR","TE","DL","LB","DB"];
+let selectedPositions = new Set(POSITION_CHOICES);
+let trendingAdds = new Map();
+let trendingDrops = new Map();
+let trendingLoadedHours = null;
+const TRENDING_LIMIT = 500;
+let currentSeason = 2026;
+let currentWeek = 1;
+let weeklyProjectionRaw = new Map();
+let seasonProjectionRaw = new Map();
+let playerResearch = new Map();
+let seasonStatsRaw = new Map();
+let weeklyStatsRaw = new Map();
+let weeklyProjectionCache = new Map();
+let columnSort = { key: "stat_fpts", dir: "desc" };
+let currentPage = 1;
+
+const $ = id => document.getElementById(id);
+const txt = v => (v ?? "").toString().trim();
+const num = v => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+function fullName(p){
+  return txt(p.full_name)
+    || `${txt(p.first_name)} ${txt(p.last_name)}`.trim()
+    || txt(p.search_full_name)
+    || p.player_id
+    || "Unknown";
+}
+
+function normalizeSearchText(v){
+  return txt(v)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g," ")
+    .trim();
+}
+
+function playerSearchText(p){
+  return normalizeSearchText([
+    p.full_name,
+    p.first_name,
+    p.last_name,
+    p.search_full_name,
+    p.search_first_name,
+    p.search_last_name,
+    p.team,
+    p.player_id
+  ].filter(Boolean).join(" "));
+}
+
+function nameMatchesSearch(p,q){
+  const normalized=normalizeSearchText(q);
+  if(!normalized) return true;
+
+  const haystack=playerSearchText(p);
+  const tokens=normalized.split(/\s+/).filter(Boolean);
+  return tokens.every(token=>haystack.includes(token));
+}
+function fantasyPos(p){
+  const fp = Array.isArray(p.fantasy_positions) ? p.fantasy_positions.filter(Boolean) : [];
+  return fp.length ? fp.join("/") : (txt(p.position) || "—");
+}
+function playerPositionGroups(p){
+  const primary=txt(p.position).toUpperCase();
+  const fp=Array.isArray(p.fantasy_positions)
+    ? p.fantasy_positions.map(x=>txt(x).toUpperCase())
+    : [];
+
+  const raw=new Set([primary,...fp].filter(Boolean));
+  const groups=new Set();
+  if(raw.has("QB")) groups.add("QB");
+  if(raw.has("RB")) groups.add("RB");
+  if(raw.has("WR")) groups.add("WR");
+  if(raw.has("TE")) groups.add("TE");
+  if([...raw].some(x=>["DL","DE","DT","NT"].includes(x))) groups.add("DL");
+  if([...raw].some(x=>["LB","ILB","OLB","MLB"].includes(x))) groups.add("LB");
+  if([...raw].some(x=>["DB","CB","S","FS","SS"].includes(x))) groups.add("DB");
+  return groups;
+}
+
+function posMatches(p){
+  if(selectedPositions.size===0) return false;
+  const groups=playerPositionGroups(p);
+  return [...selectedPositions].some(pos=>groups.has(pos));
+}
+
+function positionPresetValues(name){
+  if(name==="ALL") return POSITION_CHOICES;
+  if(name==="FLEX") return ["RB","WR","TE"];
+  if(name==="SUPERFLEX") return ["QB","RB","WR","TE"];
+  if(name==="IDP") return ["DL","LB","DB"];
+  return [];
+}
+
+function updatePositionButton(){
+  const btn=$("positionBtn");
+  if(!btn) return;
+
+  const selected=POSITION_CHOICES.filter(p=>selectedPositions.has(p));
+  if(selected.length===POSITION_CHOICES.length){
+    btn.textContent="All positions";
+  }else if(selected.length===0){
+    btn.textContent="None selected";
+  }else{
+    const presets=[
+      ["FLEX",["RB","WR","TE"]],
+      ["SUPERFLEX",["QB","RB","WR","TE"]],
+      ["IDP",["DL","LB","DB"]]
+    ];
+    const match=presets.find(([,vals])=>
+      vals.length===selected.length && vals.every(v=>selectedPositions.has(v))
+    );
+    btn.textContent=match ? match[0] : selected.join(" + ");
+  }
+}
+
+function renderPositionOptions(){
+  const host=$("positionOptions");
+  if(!host) return;
+
+  host.innerHTML=POSITION_CHOICES.map(pos=>`
+    <label class="multi-option">
+      <input type="checkbox" class="position-check" value="${pos}" ${selectedPositions.has(pos)?"checked":""}>
+      <span>${pos}</span>
+    </label>
+  `).join("");
+
+  host.querySelectorAll(".position-check").forEach(cb=>{
+    cb.addEventListener("change",()=>{
+      if(cb.checked) selectedPositions.add(cb.value);
+      else selectedPositions.delete(cb.value);
+
+      updatePositionButton();
+      const visible=new Set(statCategoriesForPosition().map(k=>`stat_${k}`));
+      visible.add("stat_fpts");
+      if(columnSort.key?.startsWith("stat_") && !visible.has(columnSort.key))
+        columnSort={key:"stat_fpts",dir:"desc"};
+      currentPage=1;
+      render();
+    });
+  });
+
+  updatePositionButton();
+}
+
+function excludedUnsupportedPosition(p){
+  const primary=txt(p.position).toUpperCase();
+  const fp=Array.isArray(p.fantasy_positions)
+    ? p.fantasy_positions.map(x=>txt(x).toUpperCase())
+    : [];
+
+  // These leagues do not use kickers or team defenses.
+  const blocked=new Set(["K","PK","DEF","DST","D/ST"]);
+  if(blocked.has(primary)) return true;
+  if(fp.some(x=>blocked.has(x))) return true;
+
+  return false;
+}
+
+function irEligibleInLeague(p,index){
+  const s=leagueSettings[index]||{};
+  const inj=txt(p.injury_status).toUpperCase();
+  const st=txt(p.status).toUpperCase();
+
+  // Actual IR/PUP are IR-eligible regardless of optional commissioner toggles.
+  if(inj==="IR" || st==="IR" || st.includes("INJURED RESERVE")) return true;
+  if(inj==="PUP" || st==="PUP" || st.includes("PHYSICALLY UNABLE")) return true;
+
+  if((inj==="OUT" || st==="OUT") && Number(s.reserve_allow_out)===1) return true;
+  if((inj==="DOUBTFUL" || st==="DOUBTFUL") && Number(s.reserve_allow_doubtful)===1) return true;
+  if((inj==="SUSPENDED" || st==="SUSPENDED") && Number(s.reserve_allow_sus)===1) return true;
+  if((inj==="NA" || st==="NA") && Number(s.reserve_allow_na)===1) return true;
+  if((inj==="DNR" || st==="DNR") && Number(s.reserve_allow_dnr)===1) return true;
+  if((inj==="COVID" || st==="COVID") && Number(s.reserve_allow_cov)===1) return true;
+
+  return false;
+}
+
+function irEligibleMatches(p){
+  if(!$("irEligible").checked) return true;
+
+  const scope=$("leagueScope").value;
+  if(scope==="0") return irEligibleInLeague(p,0);
+  if(scope==="1") return irEligibleInLeague(p,1);
+
+  const a=irEligibleInLeague(p,0), b=irEligibleInLeague(p,1);
+  return $("leagueMatch").value==="both" ? (a && b) : (a || b);
+}
+
+function easternWeekday(){
+  try{
+    return new Intl.DateTimeFormat("en-US",{
+      timeZone:"America/New_York", weekday:"short"
+    }).format(new Date());
+  }catch(e){
+    return "";
+  }
+}
+
+function recentDropStillWaiver(id,index){
+  const droppedAt=recentDrops[index].get(String(id));
+  if(!droppedAt) return false;
+
+  const days=Number(leagueSettings[index]?.waiver_clear_days)||0;
+  if(days<=0) return false;
+
+  return (Date.now()-droppedAt) < days*24*60*60*1000;
+}
+
+function playerGameHasStarted(p){
+  const team=txt(p.team).toUpperCase();
+  if(!team) return false;
+  const state=gameStateByTeam.get(team);
+  return state==="in_game" || state==="complete";
+}
+
+function waiverLike(id,p,index){
+  id=String(id);
+
+  // Pending waiver claims are a strong signal.
+  if(pendingWaiverAdds[index].has(id)) return true;
+
+  // Recently dropped players remain on waivers for the configured number of days.
+  if(recentDropStillWaiver(id,index)) return true;
+
+  // Players whose current-week game has started are on after-game waivers
+  // in these leagues until the weekly waiver cycle clears.
+  if(playerGameHasStarted(p)) return true;
+
+  // Both Steel City leagues use Tuesday as the custom locked/waiver day
+  // to mimic Yahoo's weekly rollover. Treat unowned players as waiver-side
+  // rather than free agents on Tuesday.
+  if(Number(leagueSettings[index]?.daily_waivers)===1 && easternWeekday()==="Tue")
+    return true;
+
+  return false;
+}
+
+function poolState(id,p,index){
+  id=String(id);
+  if(ownership[index].has(id)) return "owned";
+  return waiverLike(id,p,index) ? "waiver" : "fa";
+}
+
+function stateMatchesWanted(state,wanted){
+  if(wanted==="all") return true;
+  if(wanted==="available") return state==="fa" || state==="waiver";
+  return state===wanted;
+}
+
+function playerPoolMatches(id,p){
+  const wanted=$("poolStatus").value;
+  if(wanted==="all") return true;
+
+  const scope=$("leagueScope").value;
+  if(scope==="0") return stateMatchesWanted(poolState(id,p,0),wanted);
+  if(scope==="1") return stateMatchesWanted(poolState(id,p,1),wanted);
+
+  const m1=stateMatchesWanted(poolState(id,p,0),wanted);
+  const m2=stateMatchesWanted(poolState(id,p,1),wanted);
+  return $("leagueMatch").value==="both" ? (m1 && m2) : (m1 || m2);
+}
+
+function ownerCell(i,id,p){
+  const val=ownership[i].get(id);
+  if(val) return `<span class="owned">${escapeHtml(val)}</span>`;
+
+  const state=poolState(id,p,i);
+  if(state==="waiver")
+    return `<span class="waiver" title="Best-effort waiver classification from game state, drops, transactions and league settings">WAIVERS</span>`;
+  return `<span class="fa">FA</span>`;
+}
+function escapeHtml(s){
+  return txt(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function getJson(url){
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  return r.json();
+}
+
+async function loadLeague(index,id){
+  const [league,rosters,users]=await Promise.all([
+    getJson(`${API}/league/${id}`),
+    getJson(`${API}/league/${id}/rosters`),
+    getJson(`${API}/league/${id}/users`)
+  ]);
+  leagueNames[index]=txt(league.name)||`League ${index+1}`;
+  leagueSettings[index]=league.settings||{};
+  if(index===0) sharedScoring=league.scoring_settings||{};
+
+  const usersById=new Map();
+  for(const u of users||[]) usersById.set(txt(u.user_id),txt(u.display_name)||txt(u.username)||"Owned");
+
+  const own=new Map();
+  const options=[];
+  for(const roster of rosters||[]){
+    const manager=usersById.get(txt(roster.owner_id))||"Owned";
+    const teamName=txt(roster.metadata?.team_name);
+    const label=teamName?`${teamName} (${manager})`:manager;
+    const rosterId=String(roster.roster_id);
+    const players=(roster.players||[]).map(String);
+
+    for(const pid of players) own.set(pid,label);
+
+    options.push({
+      key:`${index}:${rosterId}`,
+      leagueIndex:index,
+      rosterId,
+      label,
+      manager,
+      teamName,
+      players:new Set(players)
+    });
+  }
+  ownership[index]=own;
+  rosterOptions[index]=options;
+}
+
+async function loadWaiverContext(){
+  waiverContextLoaded=false;
+  recentDrops=[new Map(),new Map()];
+  pendingWaiverAdds=[new Set(),new Set()];
+  gameStateByTeam=new Map();
+
+  // Undocumented Sleeper schedule endpoint. It gives current game state by team.
+  try{
+    const schedule=await getJson(`https://api.sleeper.com/schedule/nfl/regular/${currentSeason}`);
+    for(const game of (schedule||[])){
+      if(Number(game.week)!==Number(currentWeek)) continue;
+      const status=txt(game.status).toLowerCase();
+      if(game.home) gameStateByTeam.set(txt(game.home).toUpperCase(),status);
+      if(game.away) gameStateByTeam.set(txt(game.away).toUpperCase(),status);
+    }
+  }catch(e){
+    console.warn("NFL schedule/game state unavailable:",e);
+  }
+
+  for(let i=0;i<LEAGUES.length;i++){
+    const weeks=[currentWeek];
+    if(currentWeek>1) weeks.push(currentWeek-1);
+
+    const batches=await Promise.all(weeks.map(w=>
+      getJson(`${API}/league/${LEAGUES[i]}/transactions/${w}`).catch(()=>[])
+    ));
+
+    const txs=batches.flat().sort((a,b)=>Number(a.created||0)-Number(b.created||0));
+
+    for(const tx of txs){
+      // Track latest drops. Ownership is checked later, so re-added players
+      // won't be incorrectly displayed as available.
+      if(tx.drops && typeof tx.drops==="object"){
+        for(const pid of Object.keys(tx.drops)){
+          const t=Number(tx.created)||Number(tx.status_updated)||0;
+          if(t>0) recentDrops[i].set(String(pid),t);
+        }
+      }
+
+      // A pending waiver add is direct evidence that the player is on waivers.
+      if(tx.type==="waiver" && tx.status==="pending" && tx.adds){
+        for(const pid of Object.keys(tx.adds))
+          pendingWaiverAdds[i].add(String(pid));
+      }
+    }
+  }
+
+  waiverContextLoaded=true;
+}
+
+function normalizeProjectionFeed(data){
+  const map=new Map();
+
+  const accept=(fallbackId,row)=>{
+    if(!row || typeof row!=="object") return;
+    const id=String(row.player_id ?? row.player?.player_id ?? row.player?.id ?? fallbackId ?? "");
+    if(!id) return;
+
+    let stats=row.stats && typeof row.stats==="object" ? {...row.stats} : {...row};
+
+    // Remove obvious non-stat nested/meta fields from the flat fallback object.
+    delete stats.player;
+    delete stats.player_id;
+    delete stats.stats;
+    map.set(id,{row,stats});
+  };
+
+  if(Array.isArray(data)){
+    for(const row of data) accept(null,row);
+  }else if(data && typeof data==="object"){
+    for(const [id,row] of Object.entries(data)) accept(id,row);
+  }
+  return map;
+}
+
+
+function entryPlayed(entry){
+  if(!entry) return false;
+
+  const stats=entry.stats||{};
+  const row=entry.row||{};
+
+  // Sleeper's weekly stats feed exposes games played as gp.
+  // A played game with zero fantasy production must still count in averages.
+  if(Object.prototype.hasOwnProperty.call(stats,"gp"))
+    return num(stats.gp)>0;
+  if(Object.prototype.hasOwnProperty.call(row,"gp"))
+    return num(row.gp)>0;
+
+  // If gp is unexpectedly absent, use a few participation-oriented fallbacks
+  // rather than assuming that the existence of a stat row means the player played.
+  const participationKeys=[
+    "off_snp","def_snp","st_snp","snap_pct",
+    "pass_att","rush_att","rec_tgt","targets","tgt",
+    "idp_tkl_solo","tkl_solo","idp_tkl_ast","tkl_ast",
+    "idp_sack","sack","idp_int","def_int",
+    "kick_att","fgm","fga","xpm","xpa",
+    "punt_att","ret_att","kr_att","pr_att"
+  ];
+
+  for(const key of participationKeys){
+    if(Object.prototype.hasOwnProperty.call(stats,key) && num(stats[key])>0)
+      return true;
+    if(Object.prototype.hasOwnProperty.call(row,key) && num(row[key])>0)
+      return true;
+  }
+
+  return false;
+}
+
+function playerPlayedInMap(id,map){
+  return entryPlayed(map?.get(String(id)));
+}
+
+function statValue(stats,key,p){
+  if(Object.prototype.hasOwnProperty.call(stats,key)) return num(stats[key]);
+
+  // Known Sleeper aliases seen across stats/projection feeds.
+  const aliases={
+    idp_qbhit:["idp_qb_hit"],
+    idp_qb_hit:["idp_qbhit"],
+    idp_pd:["idp_pass_def"],
+    idp_pass_def:["idp_pd"]
+  };
+  for(const a of aliases[key]||[]){
+    if(Object.prototype.hasOwnProperty.call(stats,a)) return num(stats[a]);
+  }
+
+  // Position-specific reception bonuses are often represented in raw weekly
+  // data directly. If absent in projections, infer from receptions.
+  const primary=txt(p?.position).toUpperCase();
+  const fpos=Array.isArray(p?.fantasy_positions)?p.fantasy_positions.map(x=>txt(x).toUpperCase()):[];
+  const isPos=x=>primary===x||fpos.includes(x);
+
+  if(key==="bonus_rec_te" && isPos("TE")) return num(stats.rec);
+  if(key==="bonus_rec_rb" && isPos("RB")) return num(stats.rec);
+  if(key==="bonus_rec_wr" && isPos("WR")) return num(stats.rec);
+  if(key==="bonus_rush_att" && isPos("RB")) return num(stats.rush_att);
+
+  return 0;
+}
+
+function calcProjectedPoints(id,projectionMap,scoring){
+  const entry=projectionMap.get(String(id));
+  if(!entry) return null;
+
+  const p=playerById.get(String(id))||{};
+  const stats=entry.stats||{};
+  let total=0;
+  let used=false;
+
+  for(const [key,weightRaw] of Object.entries(scoring||{})){
+    const weight=num(weightRaw);
+    if(weight===0) continue;
+    const v=statValue(stats,key,p);
+    if(v!==0 || Object.prototype.hasOwnProperty.call(stats,key)){
+      total += weight*v;
+      used=true;
+    }
+  }
+
+  if(used) return Math.round(total*100)/100;
+
+  // Generic fallback if a stat-line dot product isn't possible.
+  const row=entry.row||{};
+  for(const k of ["pts_half_ppr","pts_ppr","pts_std"]){
+    if(row[k]!=null) return num(row[k]);
+    if(stats[k]!=null) return num(stats[k]);
+  }
+
+  return null;
+}
+
+function calcActualPoints(id,statsMap,scoring){
+  const entry=statsMap.get(String(id));
+  if(!entry) return null;
+
+  const p=playerById.get(String(id))||{};
+  const stats=entry.stats||{};
+  let total=0;
+  let used=false;
+
+  for(const [key,weightRaw] of Object.entries(scoring||{})){
+    const weight=num(weightRaw);
+    if(weight===0) continue;
+    const v=statValue(stats,key,p);
+    if(v!==0 || Object.prototype.hasOwnProperty.call(stats,key)){
+      total += weight*v;
+      used=true;
+    }
+  }
+
+  if(used) return Math.round(total*100)/100;
+
+  const row=entry.row||{};
+  for(const k of ["pts_half_ppr","pts_ppr","pts_std"]){
+    if(row[k]!=null) return num(row[k]);
+    if(stats[k]!=null) return num(stats[k]);
+  }
+
+  // Played with no fantasy production is a legitimate 0.00.
+  if(entryPlayed(entry)) return 0;
+  return null;
+}
+
+async function loadStats(){
+  seasonStatsRaw = new Map();
+  weeklyStatsRaw = new Map();
+
+  // Full-season-to-date aggregate.
+  try{
+    const seasonData = await getJson(`${STATS_API}/${currentSeason}?season_type=regular`);
+    seasonStatsRaw = normalizeProjectionFeed(seasonData);
+  }catch(e){
+    console.warn("Season stats endpoint unavailable:", e);
+  }
+
+  // Load each played/current week so we can display the game log.
+  // Sequential calls are deliberate to avoid hammering Sleeper.
+  for(let week=1; week<=currentWeek; week++){
+    try{
+      const weekData = await getJson(`${STATS_API}/${currentSeason}/${week}?season_type=regular`);
+      weeklyStatsRaw.set(week, normalizeProjectionFeed(weekData));
+    }catch(e){
+      console.warn(`Week ${week} stats unavailable:`, e);
+      weeklyStatsRaw.set(week, new Map());
+    }
+  }
+}
+
+function weeklyPointsForPlayer(id,scoring){
+  const out=[];
+  for(let week=1; week<=currentWeek; week++){
+    const map=weeklyStatsRaw.get(week)||new Map();
+    out.push({
+      week,
+      points:calcActualPoints(id,map,scoring)
+    });
+  }
+  return out;
+}
+
+function seasonPointsForPlayer(id,scoring){
+  const aggregate=calcActualPoints(id,seasonStatsRaw,scoring);
+  if(aggregate!=null) return aggregate;
+
+  // Fallback: sum weekly scores if the season aggregate isn't available.
+  const values=weeklyPointsForPlayer(id,scoring)
+    .map(x=>x.points)
+    .filter(v=>v!=null);
+  if(!values.length) return null;
+  return Math.round(values.reduce((a,b)=>a+b,0)*100)/100;
+}
+
+function populateStatsView(){
+  const opts = [
+    {value:"season_proj", label:"Season (projected)"},
+    {value:"last_season_total", label:"Last Season (total)", disabled:true},
+    {value:"this_week_total", label:"This Week (total)"},
+    {value:"this_week_proj", label:"This Week (proj)"},
+    {value:"last4_total", label:"Last 4 Weeks (total)"},
+    {value:"last4_avg", label:"Last 4 Weeks (avg)"},
+    {value:"season_total", label:"Season (total)"},
+    {value:"season_avg", label:"Season (average)"},
+    {value:"remaining_proj", label:"Remaining Games (proj)"}
+  ];
+
+  for(let w=1; w<=18; w++){
+    opts.push({value:`week_${w}_total`, label:`Week ${w} (total)`});
+    opts.push({value:`week_${w}_proj`, label:`Week ${w} (proj)`});
+  }
+
+  $("statsView").innerHTML = opts.map(o =>
+    `<option value="${o.value}" ${o.value==="this_week_proj"?"selected":""} ${o.disabled?"disabled":""}>${o.label}</option>`
+  ).join("");
+}
+
+function selectedStatLabel(){
+  const el=$("statsView");
+  return el.options[el.selectedIndex]?.text || "Stats";
+}
+
+// Yahoo-style stat columns. FPTS is always shown first; the remaining
+// categories adapt to the selected fantasy position group.
+const OFFENSE_STATS = {
+  pass_yd:  {label:"Pass Yds", keys:["pass_yd","pass_yds"]},
+  pass_td:  {label:"Pass TD", keys:["pass_td"]},
+  pass_int: {label:"Pass INT", keys:["pass_int"]},
+  rush_att: {label:"Rush Att", keys:["rush_att"]},
+  rush_yd:  {label:"Rush Yds", keys:["rush_yd","rush_yds"]},
+  rush_td:  {label:"Rush TD", keys:["rush_td"]},
+  targets:  {label:"Targets", keys:["rec_tgt","targets","tgt"]},
+  rec:      {label:"Rec", keys:["rec"]},
+  rec_yd:   {label:"Rec Yds", keys:["rec_yd","rec_yds"]},
+  rec_td:   {label:"Rec TD", keys:["rec_td"]},
+  two_pt:   {label:"2PT", sumKeys:["pass_2pt","rush_2pt","rec_2pt"]},
+  fum_lost: {label:"Fum Lost", keys:["fum_lost"]}
+};
+
+const IDP_STATS = {
+  tkl_solo: {label:"Tkl Solo", keys:["idp_tkl_solo","tkl_solo"]},
+  tkl_ast:  {label:"Tkl Ast", keys:["idp_tkl_ast","tkl_ast"]},
+  sack:     {label:"Sack", keys:["idp_sack","sack"]},
+  def_int:  {label:"INT", keys:["idp_int","def_int"]},
+  ff:       {label:"FF", keys:["idp_ff","ff"]},
+  fr:       {label:"FR", keys:["idp_fum_rec","idp_fr","fum_rec"]},
+  def_td:   {label:"TD", keys:["idp_def_td","idp_td","def_td"]},
+  safety:   {label:"Safety", keys:["idp_safety","safety"]},
+  pd:       {label:"PD", keys:["idp_pass_def","idp_pd","pass_def"]},
+  blk_kick: {label:"Blk Kick", keys:["idp_blk_kick","blk_kick"]},
+  tfl:      {label:"TFL", keys:["idp_tfl","tfl"]}
+};
+
+function statCategoriesForPosition(){
+  const qb=["pass_yd","pass_td","pass_int","rush_att","rush_yd","rush_td","two_pt","fum_lost"];
+  const skill=["rush_att","rush_yd","rush_td","targets","rec","rec_yd","rec_td","two_pt","fum_lost"];
+  const offense=["pass_yd","pass_td","pass_int","rush_att","rush_yd","rush_td","targets","rec","rec_yd","rec_td","two_pt","fum_lost"];
+  const defense=["tkl_solo","tkl_ast","sack","def_int","ff","fr","def_td","safety","pd","blk_kick","tfl"];
+
+  const hasQB=selectedPositions.has("QB");
+  const hasSkill=["RB","WR","TE"].some(p=>selectedPositions.has(p));
+  const hasOffense=hasQB || hasSkill;
+  const hasDefense=["DL","LB","DB"].some(p=>selectedPositions.has(p));
+
+  if(hasOffense && hasDefense) return [...offense,...defense];
+  if(hasDefense) return defense;
+  if(hasQB && !hasSkill) return qb;
+  if(hasQB && hasSkill) return offense;
+  if(hasSkill) return skill;
+  return [];
+}
+
+function categoryDefinition(key){
+  return OFFENSE_STATS[key] || IDP_STATS[key] || null;
+}
+
+function rawValue(stats,key){
+  const def=categoryDefinition(key);
+  if(!def || !stats) return 0;
+
+  if(def.sumKeys)
+    return def.sumKeys.reduce((sum,k)=>sum+num(stats[k]),0);
+
+  for(const k of (def.keys||[])){
+    if(Object.prototype.hasOwnProperty.call(stats,k))
+      return num(stats[k]);
+  }
+  return 0;
+}
+
+function entryStats(map,id){
+  return map?.get(String(id))?.stats || null;
+}
+
+function aggregateRawFromMaps(id,maps,key,mode="total"){
+  const vals=[];
+  for(const map of maps){
+    const entry=map?.get(String(id));
+    if(!entry) continue;
+
+    // For averages, denominator = games played.
+    // A played game with zero in this stat category counts as 0.
+    if(mode==="avg" && !entryPlayed(entry)) continue;
+
+    const stats=entry.stats||{};
+    vals.push(rawValue(stats,key));
+  }
+  if(!vals.length) return null;
+  if(mode==="avg") return vals.reduce((a,b)=>a+b,0)/vals.length;
+  return vals.reduce((a,b)=>a+b,0);
+}
+
+function selectedRawStatForPlayer(id,key){
+  const view=$("statsView").value;
+
+  if(view==="this_week_proj"){
+    const stats=entryStats(weeklyProjectionRaw,id);
+    return stats ? rawValue(stats,key) : null;
+  }
+  if(view==="this_week_total"){
+    const map=weeklyStatsRaw.get(currentWeek)||new Map();
+    const stats=entryStats(map,id);
+    return stats ? rawValue(stats,key) : null;
+  }
+  if(view==="season_total"){
+    const stats=entryStats(seasonStatsRaw,id);
+    if(stats) return rawValue(stats,key);
+    const maps=[];
+    for(let w=1;w<=currentWeek;w++) maps.push(weeklyStatsRaw.get(w)||new Map());
+    return aggregateRawFromMaps(id,maps,key,"total");
+  }
+  if(view==="season_avg"){
+    const maps=[];
+    for(let w=1;w<=currentWeek;w++) maps.push(weeklyStatsRaw.get(w)||new Map());
+    return aggregateRawFromMaps(id,maps,key,"avg");
+  }
+  if(view==="season_proj"){
+    const stats=entryStats(seasonProjectionRaw,id);
+    return stats ? rawValue(stats,key) : null;
+  }
+  if(view==="last4_total" || view==="last4_avg"){
+    const start=Math.max(1,currentWeek-3);
+    const maps=[];
+    for(let w=start;w<=currentWeek;w++) maps.push(weeklyStatsRaw.get(w)||new Map());
+    return aggregateRawFromMaps(id,maps,key,view==="last4_avg"?"avg":"total");
+  }
+  if(view==="remaining_proj"){
+    const maps=[];
+    for(let w=currentWeek;w<=18;w++)
+      maps.push(w===currentWeek ? weeklyProjectionRaw : (weeklyProjectionCache.get(w)||new Map()));
+    return aggregateRawFromMaps(id,maps,key,"total");
+  }
+
+  let m=view.match(/^week_(\d+)_total$/);
+  if(m){
+    const map=weeklyStatsRaw.get(Number(m[1]))||new Map();
+    const stats=entryStats(map,id);
+    return stats ? rawValue(stats,key) : null;
+  }
+
+  m=view.match(/^week_(\d+)_proj$/);
+  if(m){
+    const week=Number(m[1]);
+    const map=week===currentWeek ? weeklyProjectionRaw : (weeklyProjectionCache.get(week)||new Map());
+    const stats=entryStats(map,id);
+    return stats ? rawValue(stats,key) : null;
+  }
+  return null;
+}
+
+function buildStatBundle(p,scoring){
+  const id=String(p.player_id);
+  const bundle={fpts:selectedStatForPlayer(id,scoring)};
+  for(const key of statCategoriesForPosition())
+    bundle[key]=selectedRawStatForPlayer(id,key);
+  return bundle;
+}
+
+function formatRawStat(value){
+  if(value==null) return `<span class="muted">—</span>`;
+  const isInteger=Math.abs(value-Math.round(value))<0.000001;
+  return isInteger ? String(Math.round(value)) : Number(value).toFixed(1);
+}
+
+function buildHeader(){
+  const cats=statCategoriesForPosition();
+  const core=[
+    ["name","Player"],
+    ["position","Position"],
+    ["team","NFL Team"],
+    ["rostered","Rostered %"]
+  ];
+
+  if($("showTrending")?.checked){
+    core.push(["trend_adds","Adds"],["trend_drops","Drops"]);
+  }
+
+  core.push(
+    ["league1",leagueNames[0]||"League 1"],
+    ["league2",leagueNames[1]||"League 2"],
+    ["stat_fpts","FPTS"]
+  );
+  const dynamic=cats.map(key=>[`stat_${key}`,categoryDefinition(key)?.label||key]);
+  const tail=[
+    ["age","Age"],
+    ["status","NFL Status"],
+    ["injury","Injury"],
+    ["rank","Search Rank"]
+  ];
+
+  $("headerRow").innerHTML=[...core,...dynamic,...tail]
+    .map(([key,label])=>`<th class="sortable" data-sortkey="${key}">${escapeHtml(label)} <span class="sortmark"></span></th>`)
+    .join("");
+
+  document.querySelectorAll("th.sortable").forEach(th=>{
+    th.addEventListener("click",()=>{
+      const key=th.dataset.sortkey;
+      if(columnSort.key===key) columnSort.dir=columnSort.dir==="asc"?"desc":"asc";
+      else{
+        columnSort.key=key;
+        columnSort.dir=(key.startsWith("stat_") || ["rostered","rank","trend_adds","trend_drops"].includes(key)) ? "desc" : "asc";
+      }
+
+      const dropdownMap={name:"name",position:"position",team:"team",age:"age",rank:"rank"};
+      if(dropdownMap[key] && [...$("sort").options].some(o=>o.value===dropdownMap[key]))
+        $("sort").value=dropdownMap[key];
+      else if(key.startsWith("stat_"))
+        $("sort").value="stat";
+      currentPage=1;
+      render();
+    });
+  });
+}
+
+
+async function ensureWeekProjection(week){
+  week=Number(week);
+  if(!Number.isFinite(week) || week<1 || week>18) return new Map();
+  if(week===currentWeek) return weeklyProjectionRaw;
+  if(weeklyProjectionCache.has(week)) return weeklyProjectionCache.get(week);
+
+  try{
+    const raw=await fetchProjection(
+      `${PROJ_API}/${currentSeason}/${week}`,
+      `https://api.sleeper.com/projections/nfl/${currentSeason}/${week}?season_type=regular`
+    );
+    const normalized=normalizeProjectionFeed(raw);
+    weeklyProjectionCache.set(week, normalized);
+    return normalized;
+  }catch(e){
+    console.warn(`Week ${week} projections unavailable:`,e);
+    const empty=new Map();
+    weeklyProjectionCache.set(week,empty);
+    return empty;
+  }
+}
+
+async function prepareSelectedStat(){
+  const view=$("statsView").value;
+
+  const weekMatch=view.match(/^week_(\d+)_proj$/);
+  if(weekMatch){
+    await ensureWeekProjection(Number(weekMatch[1]));
+    return;
+  }
+
+  if(view==="remaining_proj"){
+    const promises=[];
+    for(let w=currentWeek; w<=18; w++) promises.push(ensureWeekProjection(w));
+    await Promise.all(promises);
+  }
+}
+
+function selectedStatForPlayer(id,scoring){
+  const view=$("statsView").value;
+
+  if(view==="this_week_proj")
+    return calcProjectedPoints(id,weeklyProjectionRaw,scoring);
+
+  if(view==="this_week_total"){
+    const map=weeklyStatsRaw.get(currentWeek)||new Map();
+    return calcActualPoints(id,map,scoring);
+  }
+
+  if(view==="season_total")
+    return seasonPointsForPlayer(id,scoring);
+
+  if(view==="season_avg"){
+    const vals=[];
+    for(let w=1; w<=currentWeek; w++){
+      const map=weeklyStatsRaw.get(w)||new Map();
+
+      // Count only games the player actually played.
+      // calcActualPoints returns 0 for a played zero-point game.
+      if(!playerPlayedInMap(id,map)) continue;
+
+      const v=calcActualPoints(id,map,scoring);
+      vals.push(v==null ? 0 : v);
+    }
+    if(!vals.length) return null;
+    return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*100)/100;
+  }
+
+  if(view==="season_proj")
+    return calcProjectedPoints(id,seasonProjectionRaw,scoring);
+
+  if(view==="last4_total"){
+    const start=Math.max(1,currentWeek-3);
+    const vals=[];
+    for(let w=start; w<=currentWeek; w++){
+      const map=weeklyStatsRaw.get(w)||new Map();
+      const v=calcActualPoints(id,map,scoring);
+      if(v!=null) vals.push(v);
+    }
+    if(!vals.length) return null;
+    return Math.round(vals.reduce((a,b)=>a+b,0)*100)/100;
+  }
+
+  if(view==="last4_avg"){
+    const start=Math.max(1,currentWeek-3);
+    const vals=[];
+    for(let w=start; w<=currentWeek; w++){
+      const map=weeklyStatsRaw.get(w)||new Map();
+
+      // Count only games actually played within the window.
+      if(!playerPlayedInMap(id,map)) continue;
+
+      const v=calcActualPoints(id,map,scoring);
+      vals.push(v==null ? 0 : v);
+    }
+    if(!vals.length) return null;
+    return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*100)/100;
+  }
+
+  if(view==="remaining_proj"){
+    const vals=[];
+    for(let w=currentWeek; w<=18; w++){
+      const map=(w===currentWeek)?weeklyProjectionRaw:(weeklyProjectionCache.get(w)||new Map());
+      const v=calcProjectedPoints(id,map,scoring);
+      if(v!=null) vals.push(v);
+    }
+    if(!vals.length) return null;
+    return Math.round(vals.reduce((a,b)=>a+b,0)*100)/100;
+  }
+
+  let m=view.match(/^week_(\d+)_total$/);
+  if(m){
+    const week=Number(m[1]);
+    const map=weeklyStatsRaw.get(week)||new Map();
+    return calcActualPoints(id,map,scoring);
+  }
+
+  m=view.match(/^week_(\d+)_proj$/);
+  if(m){
+    const week=Number(m[1]);
+    const map=(week===currentWeek)?weeklyProjectionRaw:(weeklyProjectionCache.get(week)||new Map());
+    return calcProjectedPoints(id,map,scoring);
+  }
+
+  return null;
+}
+
+async function fetchProjection(urlPrimary,urlFallback){
+  try{
+    return await getJson(urlPrimary);
+  }catch(e1){
+    console.warn("Primary projection endpoint failed:",e1);
+    if(!urlFallback) throw e1;
+    return await getJson(urlFallback);
+  }
+}
+
+async function loadProjections(){
+  const week=currentWeek;
+
+  const weekly=await fetchProjection(
+    `${PROJ_API}/${currentSeason}/${week}`,
+    `https://api.sleeper.com/projections/nfl/${currentSeason}/${week}?season_type=regular`
+  );
+  const seasonal=await fetchProjection(
+    `${PROJ_API}/${currentSeason}`,
+    `https://api.sleeper.com/projections/nfl/${currentSeason}?season_type=regular`
+  );
+
+  weeklyProjectionRaw=normalizeProjectionFeed(weekly);
+  seasonProjectionRaw=normalizeProjectionFeed(seasonal);
+}
+
+async function loadResearch(){
+  try{
+    const data = await getJson(`${API.replace("/v1","")}/players/nfl/research/regular/${currentSeason}/${currentWeek}`);
+    const map = new Map();
+
+    if(data && typeof data==="object"){
+      for(const [id,row] of Object.entries(data)){
+        if(!row || typeof row!=="object") continue;
+        map.set(String(id), {
+          owned: row.owned == null ? null : Number(row.owned)
+        });
+      }
+    }
+
+    playerResearch = map;
+  }catch(e){
+    console.warn("Sleeper research endpoint unavailable:", e);
+    playerResearch = new Map();
+  }
+}
+
+function pctValue(id,key){
+  const row = playerResearch.get(String(id));
+  if(!row || row[key] == null || !Number.isFinite(Number(row[key]))) return null;
+  const n = Number(row[key]);
+  // Sleeper's research feed normally returns fractions (e.g. .85 = 85%).
+  return n <= 1 ? n * 100 : n;
+}
+
+
+
+async function loadTrending(force=false){
+  const hours=Number($("trendingWindow")?.value)||24;
+  if(!force && trendingLoadedHours===hours) return;
+
+  $("status").textContent=`Loading Sleeper add/drop trends (${hours}h)…`;
+  try{
+    const [adds,drops]=await Promise.all([
+      getJson(`${API}/players/nfl/trending/add?lookback_hours=${hours}&limit=${TRENDING_LIMIT}`),
+      getJson(`${API}/players/nfl/trending/drop?lookback_hours=${hours}&limit=${TRENDING_LIMIT}`)
+    ]);
+    trendingAdds=new Map((adds||[]).map(row=>[String(row.player_id),Number(row.count)||0]));
+    trendingDrops=new Map((drops||[]).map(row=>[String(row.player_id),Number(row.count)||0]));
+    trendingLoadedHours=hours;
+  }catch(e){
+    console.warn("Sleeper trending data unavailable:",e);
+    trendingAdds=new Map();
+    trendingDrops=new Map();
+    trendingLoadedHours=hours;
+  }
+}
+
+function trendValue(map,id){
+  const key=String(id);
+  return map.has(key) ? map.get(key) : null;
+}
+
+function populateNFLTeams(){
+  const current=$("nflTeam").value;
+  const teams=[...new Set(allPlayers.map(p=>txt(p.team)).filter(Boolean))].sort();
+  $("nflTeam").innerHTML=`<option value="ALL">All teams</option>`+
+    teams.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+  if([...$("nflTeam").options].some(o=>o.value===current)) $("nflTeam").value=current;
+}
+
+function allRosterOptions(){
+  return [...(rosterOptions[0]||[]),...(rosterOptions[1]||[])];
+}
+
+function updateIncludeTeamsButton(){
+  const btn=$("includeTeamsBtn");
+  if(!btn) return;
+
+  const selected=allRosterOptions().filter(o=>selectedRosterKeys.has(o.key));
+
+  if(selected.length===0){
+    btn.textContent="None selected";
+  }else if(selected.length===1){
+    btn.textContent=selected[0].label;
+  }else if(selected.length===2){
+    btn.textContent=`${selected[0].label} + ${selected[1].label}`;
+  }else{
+    btn.textContent=`${selected.length} teams selected`;
+  }
+}
+
+function renderIncludeTeams(){
+  const host=$("includeTeamsOptions");
+  if(!host) return;
+
+  host.innerHTML=[0,1].map(i=>{
+    const rows=(rosterOptions[i]||[]).map(o=>`
+      <label class="multi-option">
+        <input
+          type="checkbox"
+          class="include-team-check"
+          value="${escapeHtml(o.key)}"
+          ${selectedRosterKeys.has(o.key)?"checked":""}>
+        <span>${escapeHtml(o.label)}</span>
+      </label>`).join("");
+
+    return `
+      <div class="multi-group">${escapeHtml(leagueNames[i]||`League ${i+1}`)}</div>
+      ${rows}`;
+  }).join("");
+
+  host.querySelectorAll(".include-team-check").forEach(cb=>{
+    cb.addEventListener("change",()=>{
+      if(cb.checked) selectedRosterKeys.add(cb.value);
+      else selectedRosterKeys.delete(cb.value);
+
+      updateIncludeTeamsButton();
+      currentPage=1;
+      render();
+    });
+  });
+
+  updateIncludeTeamsButton();
+}
+
+function playerOnIncludedRoster(id){
+  id=String(id);
+  if(selectedRosterKeys.size===0) return false;
+
+  for(const option of allRosterOptions()){
+    if(selectedRosterKeys.has(option.key) && option.players.has(id))
+      return true;
+  }
+  return false;
+}
+
+async function refreshData(){
+  $("status").textContent="Loading players, leagues, stats, projections and waiver context…";
+  try{
+    const statePromise=getJson(`${API}/state/nfl`).catch(()=>({season:2026,week:1}));
+    const [playerMap,state]=await Promise.all([
+      getJson(`${API}/players/nfl`),
+      statePromise,
+      loadLeague(0,LEAGUES[0]),
+      loadLeague(1,LEAGUES[1])
+    ]);
+
+    currentSeason=Number(state.season)||2026;
+    currentWeek=Number(state.week)||1;
+
+    allPlayers=Object.entries(playerMap||{}).map(([id,p])=>({player_id:String(id),...p}));
+    playerById=new Map(allPlayers.map(p=>[String(p.player_id),p]));
+
+    const ls=$("leagueScope");
+    ls.options[1].text=leagueNames[0];
+    ls.options[2].text=leagueNames[1];
+    renderIncludeTeams();
+    renderPositionOptions();
+    populateStatsView();
+    populateNFLTeams();
+    buildHeader();
+    await Promise.all([loadProjections(), loadResearch(), loadStats(), loadWaiverContext()]);
+    if($("showTrending")?.checked) await loadTrending(true);
+    render();
+  }catch(e){
+    console.error(e);
+    $("status").textContent="Could not load Sleeper data: "+e.message;
+  }
+}
+
+
+
+function render(){
+  const q=$("search").value.trim();
+  const team=$("nflTeam").value;
+  const sort=$("sort").value;
+  const limit=Number($("limit").value);
+  const scoring=sharedScoring||{};
+
+  let rows=allPlayers.filter(p=>{
+    const id=String(p.player_id);
+
+    // Hard exclusion: kickers and team defenses should never appear.
+    if(excludedUnsupportedPosition(p)) return false;
+
+    if(!nameMatchesSearch(p,q)) return false;
+    if(!posMatches(p)) return false;
+    if(team!=="ALL" && txt(p.team)!==team) return false;
+
+    const includedTeam=playerOnIncludedRoster(id);
+    const includedPool=$("includePool").checked && playerPoolMatches(id,p);
+
+    // Independent result sets:
+    // pool only, selected team(s) only, or the union of both.
+    if(!includedPool && !includedTeam) return false;
+
+    if(!irEligibleMatches(p)) return false;
+    return true;
+  }).map(p=>({
+    ...p,
+    _stats:buildStatBundle(p,scoring),
+    _rostered:pctValue(p.player_id,"owned"),
+    _trendAdds:trendValue(trendingAdds,p.player_id),
+    _trendDrops:trendValue(trendingDrops,p.player_id)
+  }));
+
+  const activeSort = columnSort?.key || (sort==="stat" ? "stat_fpts" : sort) || "stat_fpts";
+  const dir = columnSort?.dir === "asc" ? 1 : -1;
+
+  function cmpText(x,y){
+    return txt(x).localeCompare(txt(y), undefined, {numeric:true, sensitivity:"base"});
+  }
+  function cmpNum(x,y,missing=999999){
+    const ax = (x===null || x===undefined || x==="") ? missing : Number(x);
+    const by = (y===null || y===undefined || y==="") ? missing : Number(y);
+    const aNum = Number.isFinite(ax) ? ax : missing;
+    const bNum = Number.isFinite(by) ? by : missing;
+    return aNum - bNum;
+  }
+  function compare(a,b){
+    let c=0;
+    if(activeSort==="stat" || activeSort==="stat_fpts")
+      c=cmpNum(a._stats?.fpts,b._stats?.fpts,-999999);
+    else if(activeSort.startsWith("stat_")){
+      const key=activeSort.slice(5);
+      c=cmpNum(a._stats?.[key],b._stats?.[key],-999999);
+    }
+    else if(activeSort==="rostered") c=cmpNum(a._rostered,b._rostered,-999999);
+    else if(activeSort==="trend_adds") c=cmpNum(a._trendAdds,b._trendAdds,-999999);
+    else if(activeSort==="trend_drops") c=cmpNum(a._trendDrops,b._trendDrops,-999999);
+    else if(activeSort==="name") c=cmpText(fullName(a),fullName(b));
+    else if(activeSort==="position") c=cmpText(fantasyPos(a),fantasyPos(b));
+    else if(activeSort==="team") c=cmpText(a.team,b.team);
+    else if(activeSort==="age") c=cmpNum(a.age,b.age,999);
+    else if(activeSort==="status") c=cmpText(a.status,b.status);
+    else if(activeSort==="injury") c=cmpText(a.injury_status,b.injury_status);
+    else if(activeSort==="league1")
+      c=cmpText(ownership[0].get(String(a.player_id)) || poolState(String(a.player_id),a,0),
+                ownership[0].get(String(b.player_id)) || poolState(String(b.player_id),b,0));
+    else if(activeSort==="league2")
+      c=cmpText(ownership[1].get(String(a.player_id)) || poolState(String(a.player_id),a,1),
+                ownership[1].get(String(b.player_id)) || poolState(String(b.player_id),b,1));
+    else if(activeSort==="rank") c=cmpNum(a.search_rank,b.search_rank,999999);
+
+    if(c===0) c=cmpText(fullName(a),fullName(b));
+    return c*dir;
+  }
+
+  rows.sort(compare);
+
+  const total=rows.length;
+  const pageSize=limit;
+  const totalPages=pageSize>=99999 ? 1 : Math.max(1,Math.ceil(total/pageSize));
+
+  if(currentPage>totalPages) currentPage=totalPages;
+  if(currentPage<1) currentPage=1;
+
+  const startIndex=pageSize>=99999 ? 0 : (currentPage-1)*pageSize;
+  const endIndex=pageSize>=99999 ? total : Math.min(startIndex+pageSize,total);
+  rows=rows.slice(startIndex,endIndex);
+
+  const fmt=v=>v==null?`<span class="muted">—</span>`:`<span class="proj">${Number(v).toFixed(2)}</span>`;
+  const fmtPct=v=>v==null?`<span class="muted">—</span>`:`<span class="proj">${Number(v).toFixed(1)}%</span>`;
+
+  $("rows").innerHTML=rows.map(p=>{
+    const id=String(p.player_id);
+    const statCells=statCategoriesForPosition()
+      .map(key=>`<td>${formatRawStat(p._stats?.[key])}</td>`)
+      .join("");
+
+    return `<tr class="player-row">
+      <td><strong>${escapeHtml(fullName(p))}</strong></td>
+      <td>${escapeHtml(fantasyPos(p))}</td>
+      <td>${escapeHtml(txt(p.team)||"FA")}</td>
+      <td>${fmtPct(p._rostered)}</td>
+      ${$("showTrending")?.checked
+        ? `<td>${p._trendAdds==null?`<span class="muted">—</span>`:`<span class="trend-up">${p._trendAdds.toLocaleString()}</span>`}</td>
+           <td>${p._trendDrops==null?`<span class="muted">—</span>`:`<span class="trend-down">${p._trendDrops.toLocaleString()}</span>`}</td>`
+        : ""}
+      <td>${ownerCell(0,id,p)}</td>
+      <td>${ownerCell(1,id,p)}</td>
+      <td>${fmt(p._stats?.fpts)}</td>
+      ${statCells}
+      <td>${escapeHtml(txt(p.age)||"—")}</td>
+      <td><span class="tag">${escapeHtml(txt(p.status)||"—")}</span></td>
+      <td>${escapeHtml(txt(p.injury_status)||"—")}</td>
+      <td>${escapeHtml(txt(p.search_rank)||"—")}</td>
+    </tr>`;
+  }).join("");
+  buildHeader();
+  updateSortIndicators();
+
+  $("pageInfo").textContent=total===0
+    ? "Page 1 of 1"
+    : `Page ${currentPage} of ${totalPages}`;
+  $("prevPage").disabled=currentPage<=1 || total===0 || pageSize>=99999;
+  $("nextPage").disabled=currentPage>=totalPages || total===0 || pageSize>=99999;
+  $("pagination").style.display=total===0 ? "none" : "flex";
+
+  if(!$("includePool").checked && selectedRosterKeys.size===0){
+    $("status").innerHTML=`Nothing is selected to display. Turn on <strong>Include player pool</strong> and/or select one or more teams under <strong>Include Team(s)</strong>.`;
+  }else if(total===0 && q){
+    $("status").innerHTML=`<span class="count">0</span> matches for "${escapeHtml(q)}" under the current filters. If this player should appear, try Clear Filters to rule out Position, NFL Team, Player Pool, League, or IR eligibility filters.`;
+  }else{
+    const positionText=selectedPositions.size===POSITION_CHOICES.length
+      ? " · positions: all"
+      : ` · positions: ${escapeHtml(POSITION_CHOICES.filter(p=>selectedPositions.has(p)).join("/") || "none")}`;
+    const trendText=$("showTrending")?.checked
+      ? ` · trends: ${escapeHtml($("trendingWindow").options[$("trendingWindow").selectedIndex].text)}`
+      : "";
+    const poolText=$("includePool").checked
+      ? ` · pool: ${escapeHtml($("poolStatus").options[$("poolStatus").selectedIndex].text)}`
+      : " · pool off";
+    const includedText=selectedRosterKeys.size
+      ? ` · ${selectedRosterKeys.size} selected team${selectedRosterKeys.size===1?"":"s"}`
+      : "";
+    const rangeText=total>0
+      ? ` · showing ${startIndex+1}-${endIndex} of ${total}`
+      : "";
+    $("status").innerHTML=`<span class="count">${total}</span> match${total===1?"":"es"} · NFL Week ${currentWeek} · ${escapeHtml(selectedStatLabel())}${positionText}${poolText}${includedText}${trendText}${rangeText}`;
+  }
+}
+
+function clearFilters(){
+  $("search").value="";
+  selectedPositions=new Set(POSITION_CHOICES);
+  renderPositionOptions();
+  $("nflTeam").value="ALL";
+  $("poolStatus").value="available";
+  $("includePool").checked=true;
+  $("leagueScope").value="both";
+  $("leagueMatch").value="either";
+  $("irEligible").checked=false;
+  selectedRosterKeys.clear();
+  renderIncludeTeams();
+  $("sort").value="stat";
+  $("limit").value="100";
+  columnSort = { key:"stat_fpts", dir:"desc" };
+  currentPage=1;
+  render();
+}
+
+["nflTeam","poolStatus","includePool","leagueScope","leagueMatch","irEligible","limit"].forEach(id=>$(id).addEventListener("change",()=>{
+  updateLeagueMatchState();
+  currentPage=1;
+  render();
+}));
+
+function updateLeagueMatchState(){
+  const both=$("leagueScope").value==="both";
+  $("leagueMatch").disabled=!both;
+  $("leagueMatch").title=both ? "" : "Only applies when Both Leagues is selected";
+}
+
+$("positionBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  $("positionWrap").classList.toggle("open");
+  $("includeTeamsWrap").classList.remove("open");
+});
+
+$("positionMenu").addEventListener("click",e=>e.stopPropagation());
+
+document.querySelectorAll("[data-pos-preset]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    selectedPositions=new Set(positionPresetValues(btn.dataset.posPreset));
+    renderPositionOptions();
+    const visible=new Set(statCategoriesForPosition().map(k=>`stat_${k}`));
+    visible.add("stat_fpts");
+    if(columnSort.key?.startsWith("stat_") && !visible.has(columnSort.key))
+      columnSort={key:"stat_fpts",dir:"desc"};
+    currentPage=1;
+    render();
+  });
+});
+
+$("showTrending").addEventListener("change",async()=>{
+  $("trendingWindow").disabled=!$("showTrending").checked;
+  if($("showTrending").checked) await loadTrending();
+  if(["trend_adds","trend_drops"].includes(columnSort.key) && !$("showTrending").checked)
+    columnSort={key:"stat_fpts",dir:"desc"};
+  currentPage=1;
+  render();
+});
+
+$("trendingWindow").addEventListener("change",async()=>{
+  if($("showTrending").checked){
+    await loadTrending();
+    currentPage=1;
+    render();
+  }
+});
+
+$("includeTeamsBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  $("includeTeamsWrap").classList.toggle("open");
+  $("positionWrap").classList.remove("open");
+});
+
+$("includeTeamsMenu").addEventListener("click",e=>e.stopPropagation());
+
+document.addEventListener("click",()=>{
+  $("includeTeamsWrap").classList.remove("open");
+  $("positionWrap").classList.remove("open");
+});
+
+$("includeTeamsClear").addEventListener("click",()=>{
+  selectedRosterKeys.clear();
+  renderIncludeTeams();
+  currentPage=1;
+  render();
+});
+
+$("includeTeamsAll").addEventListener("click",()=>{
+  selectedRosterKeys=new Set(allRosterOptions().map(o=>o.key));
+  renderIncludeTeams();
+  currentPage=1;
+  render();
+});
+
+$("statsView").addEventListener("change",async()=>{
+  $("status").textContent=`Loading ${selectedStatLabel()}…`;
+  await prepareSelectedStat();
+  columnSort={key:"stat_fpts",dir:"desc"};
+  $("sort").value="stat";
+  currentPage=1;
+  render();
+});
+
+$("sort").addEventListener("change",()=>{
+  const key=$("sort").value;
+  columnSort = {
+    key: key==="stat" ? "stat_fpts" : key,
+    dir: key==="stat" ? "desc" : "asc"
+  };
+  currentPage=1;
+  render();
+});
+
+function updateSortIndicators(){
+  document.querySelectorAll("th.sortable").forEach(th=>{
+    const mark=th.querySelector(".sortmark");
+    if(!mark) return;
+    if(th.dataset.sortkey===columnSort.key){
+      mark.textContent = columnSort.dir==="asc" ? "▲" : "▼";
+    }else{
+      mark.textContent = "";
+    }
+  });
+}
+
+$("search").addEventListener("input",()=>{
+  currentPage=1;
+  render();
+});
+$("prevPage").addEventListener("click",()=>{
+  if(currentPage>1){
+    currentPage--;
+    render();
+    window.scrollTo({top:$("rows").getBoundingClientRect().top + window.scrollY - 120,behavior:"smooth"});
+  }
+});
+
+$("nextPage").addEventListener("click",()=>{
+  currentPage++;
+  render();
+  window.scrollTo({top:$("rows").getBoundingClientRect().top + window.scrollY - 120,behavior:"smooth"});
+});
+
+$("refresh").addEventListener("click",()=>{
+  currentPage=1;
+  refreshData();
+});
+$("clear").addEventListener("click",clearFilters);
+
+updateLeagueMatchState();
+renderPositionOptions();
+refreshData();
+</script>
+</body>
+</html>
