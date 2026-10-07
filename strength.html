@@ -83,7 +83,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.2</span></div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.2.1</span></div>
 
   <div class="notice">
     <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
@@ -451,7 +451,7 @@ function countFromSnapshot(snap,rowKey,cat){
 }
 
 function previousLockedWeek(index,week){
-  const weeks=Object.keys(historyData?.leagues?.[LEAGUES[index]]?.weeks||{})
+  const weeks=Object.keys(history?.leagues?.[LEAGUES[index]]?.weeks||{})
     .map(Number)
     .filter(w=>Number.isFinite(w) && w<Number(week))
     .sort((a,b)=>a-b);
