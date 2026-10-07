@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>League Strength Tracker</title>
+<style>
+  :root { color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#111318; color:#f3f4f6; }
+  .wrap { max-width:1680px; margin:24px auto; padding:0 18px 50px; }
+  h1 { margin:0 0 5px; font-size:28px; }
+  h2 { margin:26px 0 10px; font-size:20px; }
+  .sub,.muted { color:#9ea5b1; }
+  .notice { margin:14px 0 18px; padding:11px 13px; border:1px solid #6d5a20; background:#211d12; border-radius:9px; color:#e8dca6; font-size:12px; line-height:1.5; }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin:16px 0 10px; }
+  .control { min-width:180px; }
+  label { display:block; margin-bottom:5px; color:#aeb4bf; font-size:12px; }
+  select,button,input[type="file"] { padding:9px 11px; border:1px solid #343944; border-radius:8px; background:#1a1e26; color:#fff; font-size:14px; }
+  button { cursor:pointer; font-weight:700; background:#2b6ef3; border-color:#2b6ef3; }
+  button.secondary { background:#222833; border-color:#3a404c; }
+  button.danger { background:#6a2930; border-color:#8b3b45; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button:hover:not(:disabled) { filter:brightness(1.08); }
+  .status { min-height:22px; margin:10px 0 16px; color:#c7ccd5; font-size:13px; }
+  .preview { border:1px solid #303540; border-radius:10px; background:#171b22; margin:14px 0 20px; overflow:hidden; }
+  .preview-head { padding:11px 14px; background:#1b1f27; border-bottom:1px solid #303540; display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+  .badge { display:inline-block; padding:3px 8px; border-radius:999px; border:1px solid #454b57; font-size:11px; }
+  .badge.live { color:#f6c453; border-color:#806b31; }
+  .badge.locked { color:#55d187; border-color:#326b4a; }
+  .preview-grid { display:grid; grid-template-columns:repeat(4,minmax(220px,1fr)); }
+  .rank-card { padding:12px; border-right:1px solid #252a33; }
+  .rank-card:last-child { border-right:0; }
+  .rank-card h3 { margin:0 0 8px; font-size:15px; }
+  .rank-list { max-height:350px; overflow:auto; font-size:12px; }
+  .rank-row { display:grid; grid-template-columns:28px minmax(130px,1fr) 56px 62px minmax(90px,1fr); gap:6px; padding:4px 0; border-bottom:1px solid #232832; }
+  .rank-row:last-child { border-bottom:0; }
+  .ppg { font-variant-numeric:tabular-nums; font-weight:800; }
+  .history-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .history-card { border:1px solid #303540; border-radius:10px; overflow:hidden; background:#171b22; }
+  .history-card.wide { grid-column:1/-1; }
+  .history-title { padding:10px 12px; background:#1b1f27; font-weight:800; border-bottom:1px solid #303540; display:flex; justify-content:space-between; gap:10px; }
+  .tablebox { overflow:auto; }
+  table { width:100%; border-collapse:collapse; min-width:850px; }
+  th,td { border-bottom:1px solid #292e38; border-right:1px solid #292e38; padding:7px 8px; text-align:center; font-size:12px; white-space:nowrap; }
+  th:first-child,td:first-child { position:sticky; left:0; z-index:2; text-align:left; background:#1b1f27; min-width:150px; font-weight:700; }
+  th { position:sticky; top:0; z-index:3; background:#1b1f27; color:#cfd4dd; }
+  th:first-child { z-index:4; }
+  tr.total td { font-weight:800; background:#151922; }
+  td.locked-cell { cursor:pointer; font-weight:800; color:#dfe7ff; }
+  td.locked-cell:hover { background:#242b37; }
+  td.live-cell { color:#f6c453; font-weight:800; }
+  .audit { margin-top:18px; border:1px solid #303540; border-radius:10px; background:#171b22; overflow:hidden; }
+  .audit-head { padding:10px 12px; background:#1b1f27; border-bottom:1px solid #303540; font-weight:800; }
+  .audit-body { padding:10px 12px; font-size:13px; line-height:1.55; }
+  .audit-player { display:inline-block; margin:3px 6px 3px 0; padding:3px 7px; border:1px solid #3a404c; border-radius:999px; }
+  .foot { margin-top:16px; color:#8f96a3; font-size:11px; line-height:1.5; }
+  #importFile { display:none; }
+  @media(max-width:1100px){
+    .preview-grid { grid-template-columns:1fr 1fr; }
+    .history-sections { grid-template-columns:1fr; }
+    .history-card.wide { grid-column:auto; }
+  }
+  @media(max-width:650px){
+    .preview-grid { grid-template-columns:1fr; }
+    .rank-card { border-right:0; border-bottom:1px solid #252a33; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>League Strength Tracker</h1>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game.</div>
+
+  <div class="notice">
+    <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <label for="leagueSelect">League</label>
+      <select id="leagueSelect"><option>Loading…</option></select>
+    </div>
+    <div class="control">
+      <label for="weekSelect">Week</label>
+      <select id="weekSelect"></select>
+    </div>
+    <button id="refresh">Refresh Sleeper Data</button>
+    <button id="calculate" class="secondary">Calculate Week</button>
+    <button id="lock">Lock Week + Download JSON</button>
+    <button id="unlock" class="danger">Unlock Week</button>
+    <button id="download" class="secondary">Download Current JSON</button>
+    <button id="import" class="secondary">Import JSON</button>
+    <input id="importFile" type="file" accept="application/json,.json">
+  </div>
+
+  <div id="status" class="status"></div>
+  <div id="preview"></div>
+
+  <h2>Locked Weekly History</h2>
+  <div id="history" class="history-sections"></div>
+
+  <div id="audit" class="audit" style="display:none">
+    <div id="auditHead" class="audit-head"></div>
+    <div id="auditBody" class="audit-body"></div>
+  </div>
+
+  <div class="foot">
+    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row.
+  </div>
+</div>
+
+<script>
+const LEAGUES=["1399909125441224704","1399913391677554688"];
+const API="https://api.sleeper.app/v1";
+const STATS_API="https://api.sleeper.com/stats/nfl";
+const CATEGORIES={QB:18,RB:25,WR:25,TE:18};
+const CATEGORY_ORDER=["QB","RB","WR","TE","RBWR"];
+const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR"};
+
+let currentSeason=2026;
+let currentWeek=1;
+let players=new Map();
+let leagues=[null,null];
+let weeklyStats=new Map();
+let history={schema_version:1,updated_at:null,leagues:{}};
+let previewCache=new Map();
+
+const $=id=>document.getElementById(id);
+const txt=v=>(v??"").toString().trim();
+const num=v=>{ const n=Number(v); return Number.isFinite(n)?n:0; };
+const esc=s=>txt(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function getJson(url){
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  return r.json();
+}
+
+function normalizeFeed(data){
+  const map=new Map();
+  const accept=(fallback,row)=>{
+    if(!row || typeof row!=="object") return;
+    const id=String(row.player_id ?? row.player?.player_id ?? row.player?.id ?? fallback ?? "");
+    if(!id) return;
+    let stats=row.stats && typeof row.stats==="object" ? {...row.stats} : {...row};
+    delete stats.player; delete stats.player_id; delete stats.stats;
+    map.set(id,{row,stats});
+  };
+  if(Array.isArray(data)) data.forEach(r=>accept(null,r));
+  else if(data && typeof data==="object") Object.entries(data).forEach(([id,row])=>accept(id,row));
+  return map;
+}
+
+function fullName(p){
+  return txt(p?.full_name) || `${txt(p?.first_name)} ${txt(p?.last_name)}`.trim() || "Unknown";
+}
+
+function playerPosition(p){
+  const primary=txt(p?.position).toUpperCase();
+  const fp=Array.isArray(p?.fantasy_positions)?p.fantasy_positions.map(x=>txt(x).toUpperCase()):[];
+  const raw=new Set([primary,...fp].filter(Boolean));
+  for(const pos of ["QB","RB","WR","TE"]) if(raw.has(pos)) return pos;
+  return null;
+}
+
+function entryPlayed(entry){
+  if(!entry) return false;
+  const stats=entry.stats||{}, row=entry.row||{};
+  if(Object.prototype.hasOwnProperty.call(stats,"gp")) return num(stats.gp)>0;
+  if(Object.prototype.hasOwnProperty.call(row,"gp")) return num(row.gp)>0;
+
+  const participation=["off_snp","snap_pct","pass_att","rush_att","rec_tgt","targets","tgt"];
+  return participation.some(k=>num(stats[k])>0 || num(row[k])>0);
+}
+
+function statValue(stats,key,p){
+  if(Object.prototype.hasOwnProperty.call(stats,key)) return num(stats[key]);
+  const aliases={
+    idp_qbhit:["idp_qb_hit"],
+    idp_qb_hit:["idp_qbhit"],
+    idp_pd:["idp_pass_def"],
+    idp_pass_def:["idp_pd"]
+  };
+  for(const a of aliases[key]||[]){
+    if(Object.prototype.hasOwnProperty.call(stats,a)) return num(stats[a]);
+  }
+
+  const primary=txt(p?.position).toUpperCase();
+  const fpos=Array.isArray(p?.fantasy_positions)?p.fantasy_positions.map(x=>txt(x).toUpperCase()):[];
+  const isPos=x=>primary===x||fpos.includes(x);
+  if(key==="bonus_rec_te" && isPos("TE")) return num(stats.rec);
+  if(key==="bonus_rec_rb" && isPos("RB")) return num(stats.rec);
+  if(key==="bonus_rec_wr" && isPos("WR")) return num(stats.rec);
+  if(key==="bonus_rush_att" && isPos("RB")) return num(stats.rush_att);
+  return 0;
+}
+
+function calcPoints(id,map,scoring){
+  const entry=map.get(String(id));
+  if(!entry) return null;
+  const p=players.get(String(id))||{};
+  const stats=entry.stats||{};
+  let total=0, used=false;
+
+  for(const [key,wRaw] of Object.entries(scoring||{})){
+    const w=num(wRaw);
+    if(w===0) continue;
+    const v=statValue(stats,key,p);
+    if(v!==0 || Object.prototype.hasOwnProperty.call(stats,key)){
+      total += w*v;
+      used=true;
+    }
+  }
+  if(used) return Math.round(total*100)/100;
+
+  const row=entry.row||{};
+  for(const k of ["pts_half_ppr","pts_ppr","pts_std"]){
+    if(row[k]!=null) return num(row[k]);
+    if(stats[k]!=null) return num(stats[k]);
+  }
+  return entryPlayed(entry)?0:null;
+}
+
+function ppgThroughWeek(id,week,scoring){
+  let points=0, games=0;
+  for(let w=1;w<=week;w++){
+    const map=weeklyStats.get(w)||new Map();
+    const entry=map.get(String(id));
+    if(!entryPlayed(entry)) continue;
+    const v=calcPoints(id,map,scoring);
+    points += v==null?0:v;
+    games++;
+  }
+  if(!games) return null;
+  return {ppg:points/games,total:points,games};
+}
+
+async function loadLeague(index,id){
+  const [league,rosters,users]=await Promise.all([
+    getJson(`${API}/league/${id}`),
+    getJson(`${API}/league/${id}/rosters`),
+    getJson(`${API}/league/${id}/users`)
+  ]);
+
+  const usersById=new Map((users||[]).map(u=>[String(u.user_id),{
+    display:txt(u.display_name)||txt(u.username)||"Unknown",
+    team:txt(u.metadata?.team_name)
+  }]));
+
+  leagues[index]={id,league,rosters:rosters||[],usersById};
+}
+
+function rosterLabel(info,roster){
+  const u=info.usersById.get(String(roster.owner_id))||{display:"Unknown",team:""};
+  return u.team ? `${u.team} (${u.display})` : u.display;
+}
+
+function managerLabel(info,roster){
+  const u=info.usersById.get(String(roster.owner_id))||{display:"Unknown"};
+  return u.display;
+}
+
+function buildOwnership(info){
+  const ownerByPlayer=new Map();
+  const reservePlayers=new Set();
+  const rows=[];
+
+  for(const roster of info.rosters){
+    const key=`roster:${roster.roster_id}`;
+    const label=managerLabel(info,roster);
+    const teamLabel=rosterLabel(info,roster);
+    rows.push({key,roster_id:String(roster.roster_id),label,team_label:teamLabel});
+    for(const pid of roster.players||[]) ownerByPlayer.set(String(pid),key);
+    for(const pid of roster.reserve||[]) reservePlayers.add(String(pid));
+  }
+
+  rows.sort((a,b)=>a.label.localeCompare(b.label,undefined,{sensitivity:"base"}));
+  rows.push({key:"FA",roster_id:null,label:"FA",team_label:"Free Agents"});
+  return {ownerByPlayer,reservePlayers,rows};
+}
+
+function calculateSnapshot(leagueIndex,week){
+  const info=leagues[leagueIndex];
+  if(!info) throw new Error("League data not loaded.");
+  const scoring=info.league.scoring_settings||{};
+  const ownership=buildOwnership(info);
+  const rankings={};
+
+  for(const [pos,limit] of Object.entries(CATEGORIES)){
+    const candidates=[];
+    for(const [id,p] of players.entries()){
+      if(playerPosition(p)!==pos) continue;
+      if(ownership.reservePlayers.has(id)) continue;
+
+      const avg=ppgThroughWeek(id,week,scoring);
+      if(!avg) continue;
+
+      const ownerKey=ownership.ownerByPlayer.get(id)||"FA";
+      const row=ownership.rows.find(r=>r.key===ownerKey);
+      candidates.push({
+        player_id:id,
+        name:fullName(p),
+        nfl_team:txt(p.team)||"FA",
+        position:pos,
+        ppg:Math.round(avg.ppg*1000)/1000,
+        total:Math.round(avg.total*100)/100,
+        games:avg.games,
+        owner_key:ownerKey,
+        owner_label:row?.label||"FA"
+      });
+    }
+
+    candidates.sort((a,b)=>{
+      if(b.ppg!==a.ppg) return b.ppg-a.ppg;
+      if(b.total!==a.total) return b.total-a.total;
+      return a.name.localeCompare(b.name,undefined,{sensitivity:"base"});
+    });
+
+    rankings[pos]=candidates.slice(0,limit).map((x,i)=>({...x,rank:i+1}));
+  }
+
+  const counts={};
+  for(const row of ownership.rows){
+    counts[row.key]={QB:0,RB:0,WR:0,TE:0,RBWR:0};
+  }
+  for(const pos of ["QB","RB","WR","TE"]){
+    for(const p of rankings[pos]){
+      if(!counts[p.owner_key]) counts[p.owner_key]={QB:0,RB:0,WR:0,TE:0,RBWR:0};
+      counts[p.owner_key][pos]++;
+    }
+  }
+  for(const row of Object.values(counts)) row.RBWR=row.RB+row.WR;
+
+  return {
+    season:currentSeason,
+    week,
+    calculated_at:new Date().toISOString(),
+    league_id:info.id,
+    league_name:info.league.name||`League ${leagueIndex+1}`,
+    basis:"season_to_date_ppg",
+    exclude_reserve:true,
+    roster_snapshot_note:"Ownership and reserve/IR status reflect the Sleeper roster state when this week was calculated.",
+    rows:ownership.rows,
+    counts,
+    rankings
+  };
+}
+
+function previewKey(index,week){ return `${index}:${week}`; }
+
+function selectedLeagueIndex(){ return Number($("leagueSelect").value)||0; }
+function selectedWeek(){ return Number($("weekSelect").value)||1; }
+
+function lockedSnapshot(index,week){
+  const id=LEAGUES[index];
+  return history?.leagues?.[id]?.weeks?.[String(week)] || null;
+}
+
+function calculateSelected(showStatus=true){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  const snap=calculateSnapshot(index,week);
+  previewCache.set(previewKey(index,week),snap);
+  renderPreview();
+  renderHistory();
+  if(showStatus) $("status").textContent=`Calculated ${snap.league_name} Week ${week}. This is a live preview until you lock it.`;
+  return snap;
+}
+
+function rankingCard(pos,snap){
+  const list=snap.rankings[pos]||[];
+  return `<div class="rank-card">
+    <h3>${CATEGORY_TITLES[pos]}</h3>
+    <div class="rank-list">
+      ${list.map(p=>`<div class="rank-row">
+        <div>${p.rank}</div>
+        <div>${esc(p.name)}</div>
+        <div>${esc(p.nfl_team)}</div>
+        <div class="ppg">${p.ppg.toFixed(2)}</div>
+        <div>${esc(p.owner_label)}</div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function renderPreview(){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  const locked=lockedSnapshot(index,week);
+  const live=previewCache.get(previewKey(index,week));
+  const snap=locked||live;
+
+  if(!snap){
+    $("preview").innerHTML=`<div class="preview"><div class="preview-head"><span class="muted">No preview calculated for this week yet.</span></div></div>`;
+    updateButtons();
+    return;
+  }
+
+  $("preview").innerHTML=`<div class="preview">
+    <div class="preview-head">
+      <strong>${esc(snap.league_name)} · Week ${week}</strong>
+      <span class="badge ${locked?"locked":"live"}">${locked?"LOCKED":"LIVE / UNLOCKED"}</span>
+      <span class="muted">Season-to-date PPG through Week ${week}</span>
+    </div>
+    <div class="preview-grid">
+      ${["QB","RB","WR","TE"].map(pos=>rankingCard(pos,snap)).join("")}
+    </div>
+  </div>`;
+  updateButtons();
+}
+
+function allDisplayRows(index){
+  const info=leagues[index];
+  if(!info) return [];
+  const current=buildOwnership(info).rows;
+  const seen=new Map(current.map(r=>[r.key,r]));
+  const leagueHist=history?.leagues?.[info.id]?.weeks||{};
+  for(const snap of Object.values(leagueHist)){
+    for(const row of snap.rows||[]){
+      if(!seen.has(row.key)) seen.set(row.key,row);
+    }
+  }
+  const vals=[...seen.values()].filter(r=>r.key!=="FA");
+  vals.sort((a,b)=>a.label.localeCompare(b.label,undefined,{sensitivity:"base"}));
+  vals.push(seen.get("FA")||{key:"FA",label:"FA",team_label:"Free Agents"});
+  return vals;
+}
+
+function countFromSnapshot(snap,rowKey,cat){
+  if(!snap) return null;
+  return snap.counts?.[rowKey]?.[cat] ?? 0;
+}
+
+function livePreviewFor(index,week){
+  if(lockedSnapshot(index,week)) return null;
+  return previewCache.get(previewKey(index,week))||null;
+}
+
+function historyTable(cat,index){
+  const rows=allDisplayRows(index);
+  const selected=selectedWeek();
+  const selectedLive=livePreviewFor(index,selected);
+  const title=CATEGORY_TITLES[cat];
+  const target=cat==="QB"||cat==="TE"?18:cat==="RBWR"?50:25;
+
+  const weekHeaders=Array.from({length:18},(_,i)=>`<th>${i+1}</th>`).join("");
+  const body=rows.map(row=>{
+    const cells=Array.from({length:18},(_,i)=>{
+      const week=i+1;
+      const locked=lockedSnapshot(index,week);
+      if(locked){
+        const v=countFromSnapshot(locked,row.key,cat);
+        return `<td class="locked-cell" data-week="${week}" data-row="${esc(row.key)}" data-cat="${cat}">${v}</td>`;
+      }
+      if(selectedLive && week===selected){
+        const v=countFromSnapshot(selectedLive,row.key,cat);
+        return `<td class="live-cell" title="Live preview — not locked">${v}</td>`;
+      }
+      return `<td></td>`;
+    }).join("");
+    return `<tr><td title="${esc(row.team_label||row.label)}">${esc(row.label)}</td>${cells}</tr>`;
+  }).join("");
+
+  const totals=Array.from({length:18},(_,i)=>{
+    const week=i+1;
+    const locked=lockedSnapshot(index,week);
+    if(locked){
+      const total=rows.reduce((s,r)=>s+num(countFromSnapshot(locked,r.key,cat)),0);
+      return `<td>${total}</td>`;
+    }
+    if(selectedLive && week===selected){
+      const total=rows.reduce((s,r)=>s+num(countFromSnapshot(selectedLive,r.key,cat)),0);
+      return `<td class="live-cell">${total}</td>`;
+    }
+    return `<td></td>`;
+  }).join("");
+
+  return `<div class="history-card ${cat==="RBWR"?"wide":""}">
+    <div class="history-title"><span>${title}</span><span class="muted">Expected total ${target}</span></div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Manager</th>${weekHeaders}</tr></thead>
+      <tbody>${body}<tr class="total"><td>Total</td>${totals}</tr></tbody>
+    </table></div>
+  </div>`;
+}
+
+function renderHistory(){
+  const index=selectedLeagueIndex();
+  $("history").innerHTML=CATEGORY_ORDER.map(cat=>historyTable(cat,index)).join("");
+  document.querySelectorAll("td.locked-cell").forEach(td=>{
+    td.addEventListener("click",()=>showAudit(index,Number(td.dataset.week),td.dataset.row,td.dataset.cat));
+  });
+}
+
+function playersForOwnerAndCategory(snap,rowKey,cat){
+  if(cat==="RBWR"){
+    return [...(snap.rankings?.RB||[]),...(snap.rankings?.WR||[])].filter(p=>p.owner_key===rowKey);
+  }
+  return (snap.rankings?.[cat]||[]).filter(p=>p.owner_key===rowKey);
+}
+
+function showAudit(index,week,rowKey,cat){
+  const snap=lockedSnapshot(index,week);
+  if(!snap) return;
+  const row=(snap.rows||[]).find(r=>r.key===rowKey)||{label:rowKey};
+  const list=playersForOwnerAndCategory(snap,rowKey,cat);
+  $("audit").style.display="block";
+  $("auditHead").textContent=`${snap.league_name} · Week ${week} · ${CATEGORY_TITLES[cat]} · ${row.label}`;
+  $("auditBody").innerHTML=list.length
+    ? list.map(p=>`<span class="audit-player">#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG</span>`).join("")
+    : `<span class="muted">No players from this row were in the locked ${CATEGORY_TITLES[cat]}.</span>`;
+  $("audit").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function ensureHistoryLeague(index){
+  const info=leagues[index];
+  const id=info.id;
+  if(!history.leagues[id]) history.leagues[id]={league_name:info.league.name||`League ${index+1}`,weeks:{}};
+  if(!history.leagues[id].weeks) history.leagues[id].weeks={};
+  history.leagues[id].league_name=info.league.name||history.leagues[id].league_name;
+  return history.leagues[id];
+}
+
+function lockSelected(){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  let snap=previewCache.get(previewKey(index,week));
+  if(!snap) snap=calculateSelected(false);
+
+  const existing=lockedSnapshot(index,week);
+  if(existing && !confirm(`Week ${week} is already locked. Replace the existing snapshot?`)) return;
+  if(week<currentWeek && !existing){
+    const ok=confirm(`Week ${week} is in the past. Ownership and IR/reserve status will reflect the CURRENT roster state because this week was not previously locked. Continue?`);
+    if(!ok) return;
+  }
+
+  const leagueHist=ensureHistoryLeague(index);
+  leagueHist.weeks[String(week)]={...snap,locked_at:new Date().toISOString()};
+  history.updated_at=new Date().toISOString();
+  renderPreview();
+  renderHistory();
+  downloadHistory();
+  $("status").textContent=`Week ${week} locked in the working copy. The updated strength-history.json was downloaded — replace the repository copy to make it permanent.`;
+}
+
+function unlockSelected(){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  const id=LEAGUES[index];
+  const existing=lockedSnapshot(index,week);
+  if(!existing){ $("status").textContent=`Week ${week} is not locked.`; return; }
+  if(!confirm(`Unlock ${existing.league_name} Week ${week}? This removes it from the working history.`)) return;
+  delete history.leagues[id].weeks[String(week)];
+  history.updated_at=new Date().toISOString();
+  renderPreview();
+  renderHistory();
+  downloadHistory();
+  $("status").textContent=`Week ${week} unlocked. Updated JSON downloaded.`;
+}
+
+function downloadHistory(){
+  const blob=new Blob([JSON.stringify(history,null,2)+"\n"],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="strength-history.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function loadHistory(){
+  try{
+    const r=await fetch(`strength-history.json?ts=${Date.now()}`,{cache:"no-store"});
+    if(!r.ok) throw new Error(String(r.status));
+    const data=await r.json();
+    if(data && typeof data==="object" && data.leagues){
+      history=data;
+      return "repository JSON loaded";
+    }
+  }catch(e){
+    console.warn("History JSON not loaded; starting blank.",e);
+  }
+  history={schema_version:1,updated_at:null,leagues:{}};
+  return "blank history started";
+}
+
+function updateWeekOptions(){
+  const current=$("weekSelect").value;
+  $("weekSelect").innerHTML=Array.from({length:Math.max(1,currentWeek)},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join("");
+  if(current && Number(current)<=currentWeek) $("weekSelect").value=current;
+  else $("weekSelect").value=String(currentWeek);
+}
+
+function updateLeagueOptions(){
+  const current=$("leagueSelect").value;
+  $("leagueSelect").innerHTML=leagues.map((x,i)=>`<option value="${i}">${esc(x?.league?.name||`League ${i+1}`)}</option>`).join("");
+  if(current==="0"||current==="1") $("leagueSelect").value=current;
+}
+
+function updateButtons(){
+  const locked=!!lockedSnapshot(selectedLeagueIndex(),selectedWeek());
+  $("unlock").disabled=!locked;
+  $("lock").textContent=locked?"Replace Lock + Download JSON":"Lock Week + Download JSON";
+}
+
+async function refreshAll(){
+  $("status").textContent="Loading Sleeper leagues, players and weekly stats…";
+  try{
+    const historyMsg=await loadHistory();
+    const [state,playerMap]=await Promise.all([
+      getJson(`${API}/state/nfl`),
+      getJson(`${API}/players/nfl`),
+      loadLeague(0,LEAGUES[0]),
+      loadLeague(1,LEAGUES[1])
+    ]);
+
+    currentSeason=Number(state.season)||2026;
+    currentWeek=Number(state.week)||1;
+    players=new Map(Object.entries(playerMap||{}).map(([id,p])=>[String(id),{player_id:String(id),...p}]));
+
+    weeklyStats=new Map();
+    for(let week=1;week<=currentWeek;week++){
+      try{
+        const data=await getJson(`${STATS_API}/${currentSeason}/${week}?season_type=regular`);
+        weeklyStats.set(week,normalizeFeed(data));
+      }catch(e){
+        console.warn(`Week ${week} stats unavailable`,e);
+        weeklyStats.set(week,new Map());
+      }
+    }
+
+    previewCache=new Map();
+    updateLeagueOptions();
+    updateWeekOptions();
+    renderPreview();
+    renderHistory();
+    updateButtons();
+    $("status").textContent=`NFL ${currentSeason} · current Week ${currentWeek} · ${historyMsg}. Choose a week and Calculate Week.`;
+  }catch(e){
+    console.error(e);
+    $("status").textContent="Could not load strength tracker: "+e.message;
+  }
+}
+
+$("leagueSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("weekSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("refresh").addEventListener("click",refreshAll);
+$("calculate").addEventListener("click",()=>calculateSelected(true));
+$("lock").addEventListener("click",lockSelected);
+$("unlock").addEventListener("click",unlockSelected);
+$("download").addEventListener("click",downloadHistory);
+$("import").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!data || typeof data!=="object" || !data.leagues) throw new Error("Invalid strength-history.json structure");
+    history=data;
+    renderPreview();
+    renderHistory();
+    updateButtons();
+    $("status").textContent=`Imported ${file.name} into the working copy.`;
+  }catch(err){
+    $("status").textContent="Could not import JSON: "+err.message;
+  }finally{
+    e.target.value="";
+  }
+});
+
+refreshAll();
+</script>
+</body>
+</html>
