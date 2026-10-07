@@ -106,7 +106,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row.
+    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. All 4 Positions is the sum of QB + RB + WR + TE counts (expected total 86) and does not double-count the RB/WR summary. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row.
   </div>
 </div>
 
@@ -115,8 +115,8 @@ const LEAGUES=["1399909125441224704","1399913391677554688"];
 const API="https://api.sleeper.app/v1";
 const STATS_API="https://api.sleeper.com/stats/nfl";
 const CATEGORIES={QB:18,RB:25,WR:25,TE:18};
-const CATEGORY_ORDER=["QB","RB","WR","TE","RBWR"];
-const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR"};
+const CATEGORY_ORDER=["QB","RB","WR","TE","RBWR","ALL4"];
+const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR",ALL4:"All 4 Positions"};
 
 let currentSeason=2026;
 let currentWeek=1;
@@ -427,7 +427,14 @@ function allDisplayRows(index){
 
 function countFromSnapshot(snap,rowKey,cat){
   if(!snap) return null;
-  return snap.counts?.[rowKey]?.[cat] ?? 0;
+  const row=snap.counts?.[rowKey]||{};
+
+  // Derived display metric. It is intentionally NOT written to JSON,
+  // so older locked weeks remain fully compatible.
+  if(cat==="ALL4")
+    return num(row.QB)+num(row.RB)+num(row.WR)+num(row.TE);
+
+  return row[cat] ?? 0;
 }
 
 function livePreviewFor(index,week){
@@ -440,7 +447,7 @@ function historyTable(cat,index){
   const selected=selectedWeek();
   const selectedLive=livePreviewFor(index,selected);
   const title=CATEGORY_TITLES[cat];
-  const target=cat==="QB"||cat==="TE"?18:cat==="RBWR"?50:25;
+  const target=cat==="QB"||cat==="TE"?18:cat==="RBWR"?50:cat==="ALL4"?86:25;
 
   const weekHeaders=Array.from({length:18},(_,i)=>`<th>${i+1}</th>`).join("");
   const body=rows.map(row=>{
@@ -474,7 +481,7 @@ function historyTable(cat,index){
     return `<td></td>`;
   }).join("");
 
-  return `<div class="history-card ${cat==="RBWR"?"wide":""}">
+  return `<div class="history-card ${["RBWR","ALL4"].includes(cat)?"wide":""}">
     <div class="history-title"><span>${title}</span><span class="muted">Expected total ${target}</span></div>
     <div class="tablebox"><table>
       <thead><tr><th>Manager</th>${weekHeaders}</tr></thead>
@@ -495,6 +502,14 @@ function playersForOwnerAndCategory(snap,rowKey,cat){
   if(cat==="RBWR"){
     return [...(snap.rankings?.RB||[]),...(snap.rankings?.WR||[])].filter(p=>p.owner_key===rowKey);
   }
+  if(cat==="ALL4"){
+    return [
+      ...(snap.rankings?.QB||[]),
+      ...(snap.rankings?.RB||[]),
+      ...(snap.rankings?.WR||[]),
+      ...(snap.rankings?.TE||[])
+    ].filter(p=>p.owner_key===rowKey);
+  }
   return (snap.rankings?.[cat]||[]).filter(p=>p.owner_key===rowKey);
 }
 
@@ -506,7 +521,7 @@ function showAudit(index,week,rowKey,cat){
   $("audit").style.display="block";
   $("auditHead").textContent=`${snap.league_name} · Week ${week} · ${CATEGORY_TITLES[cat]} · ${row.label}`;
   $("auditBody").innerHTML=list.length
-    ? list.map(p=>`<span class="audit-player">#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG</span>`).join("")
+    ? list.map(p=>`<span class="audit-player">${cat==="ALL4"?`${esc(p.position)} `:""}#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG</span>`).join("")
     : `<span class="muted">No players from this row were in the locked ${CATEGORY_TITLES[cat]}.</span>`;
   $("audit").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
