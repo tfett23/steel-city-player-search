@@ -40,6 +40,7 @@
   .history-card { border:1px solid #303540; border-radius:10px; overflow:hidden; background:#171b22; }
   .history-card.wide { grid-column:1/-1; }
   .history-title { padding:10px 12px; background:#1b1f27; font-weight:800; border-bottom:1px solid #303540; display:flex; justify-content:space-between; gap:10px; }
+  .history-subtitle { margin-top:3px; font-size:11px; color:#8f96a3; font-weight:400; }
   .tablebox { overflow:auto; }
   table { width:100%; border-collapse:collapse; min-width:850px; }
   th,td { border-bottom:1px solid #292e38; border-right:1px solid #292e38; padding:7px 8px; text-align:center; font-size:12px; white-space:nowrap; }
@@ -70,7 +71,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game.</div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.1</span></div>
 
   <div class="notice">
     <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
@@ -106,7 +107,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. All 4 Positions is the sum of QB + RB + WR + TE counts (expected total 86) and does not double-count the RB/WR summary. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row.
+    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. The sixth section, Top 86 QB/RB/WR/TE, is the sum of the four separate positional counts (18 QB + 25 RB + 25 WR + 18 TE = 86) and is shown in addition to the Top 50 RB/WR section. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row.
   </div>
 </div>
 
@@ -116,7 +117,7 @@ const API="https://api.sleeper.app/v1";
 const STATS_API="https://api.sleeper.com/stats/nfl";
 const CATEGORIES={QB:18,RB:25,WR:25,TE:18};
 const CATEGORY_ORDER=["QB","RB","WR","TE","RBWR","ALL4"];
-const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR",ALL4:"All 4 Positions"};
+const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR",ALL4:"Top 86 QB/RB/WR/TE"};
 
 let currentSeason=2026;
 let currentWeek=1;
@@ -482,7 +483,13 @@ function historyTable(cat,index){
   }).join("");
 
   return `<div class="history-card ${["RBWR","ALL4"].includes(cat)?"wide":""}">
-    <div class="history-title"><span>${title}</span><span class="muted">Expected total ${target}</span></div>
+    <div class="history-title">
+      <div>
+        <div>${title}</div>
+        ${cat==="ALL4" ? `<div class="history-subtitle">18 QB + 25 RB + 25 WR + 18 TE</div>` : ""}
+      </div>
+      <span class="muted">Expected total ${target}</span>
+    </div>
     <div class="tablebox"><table>
       <thead><tr><th>Manager</th>${weekHeaders}</tr></thead>
       <tbody>${body}<tr class="total"><td>Total</td>${totals}</tr></tbody>
