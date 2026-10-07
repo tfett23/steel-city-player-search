@@ -83,7 +83,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.2.2</span></div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.3</span></div>
 
   <div class="notice">
     <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
@@ -119,7 +119,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week. Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. The sixth section, Top 86 QB/RB/WR/TE, is the sum of the four separate positional counts (18 QB + 25 RB + 25 WR + 18 TE = 86) and is shown in addition to the Top 50 RB/WR section. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week: green for increases, red for decreases, with progressively darker shades through ±6. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week.
+    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. The sixth section, Top 86 QB/RB/WR/TE, is the sum of the four separate positional counts (18 QB + 25 RB + 25 WR + 18 TE = 86) and is shown in addition to the Top 50 RB/WR section. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week: green for increases, red for decreases, with progressively darker shades through ±6. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week.
   </div>
 </div>
 
@@ -293,12 +293,19 @@ function buildOwnership(info){
   return {ownerByPlayer,reservePlayers,rows};
 }
 
+function minimumGamesForWeek(week){
+  // Require a meaningful sample before a player can qualify for a positional ranking.
+  // 60% of weeks elapsed, rounded up, capped at 4 games.
+  return Math.min(4,Math.max(1,Math.ceil(Number(week)*0.60)));
+}
+
 function calculateSnapshot(leagueIndex,week){
   const info=leagues[leagueIndex];
   if(!info) throw new Error("League data not loaded.");
   const scoring=info.league.scoring_settings||{};
   const ownership=buildOwnership(info);
   const rankings={};
+  const minGames=minimumGamesForWeek(week);
 
   for(const [pos,limit] of Object.entries(CATEGORIES)){
     const candidates=[];
@@ -308,6 +315,7 @@ function calculateSnapshot(leagueIndex,week){
 
       const avg=ppgThroughWeek(id,week,scoring);
       if(!avg) continue;
+      if(avg.games < minGames) continue;
 
       const ownerKey=ownership.ownerByPlayer.get(id)||"FA";
       const row=ownership.rows.find(r=>r.key===ownerKey);
@@ -353,6 +361,8 @@ function calculateSnapshot(leagueIndex,week){
     league_name:info.league.name||`League ${leagueIndex+1}`,
     basis:"season_to_date_ppg",
     exclude_reserve:true,
+    minimum_games_required:minGames,
+    minimum_games_rule:"ceil(60% of weeks elapsed), capped at 4 games",
     roster_snapshot_note:"Ownership and reserve/IR status reflect the Sleeper roster state when this week was calculated.",
     rows:ownership.rows,
     counts,
@@ -400,7 +410,7 @@ function renderPreview(){
   const index=selectedLeagueIndex(), week=selectedWeek();
   const locked=lockedSnapshot(index,week);
   const live=previewCache.get(previewKey(index,week));
-  const snap=locked||live;
+  const snap=live||locked;
 
   if(!snap){
     $("preview").innerHTML=`<div class="preview"><div class="preview-head"><span class="muted">No preview calculated for this week yet.</span></div></div>`;
@@ -411,8 +421,8 @@ function renderPreview(){
   $("preview").innerHTML=`<div class="preview">
     <div class="preview-head">
       <strong>${esc(snap.league_name)} · Week ${week}</strong>
-      <span class="badge ${locked?"locked":"live"}">${locked?"LOCKED":"LIVE / UNLOCKED"}</span>
-      <span class="muted">Season-to-date PPG through Week ${week}</span>
+      <span class="badge ${live?"live":"locked"}">${live?"LIVE / UNLOCKED":"LOCKED"}</span>
+      <span class="muted">Season-to-date PPG through Week ${week} · minimum ${snap.minimum_games_required ?? minimumGamesForWeek(week)} games played</span>
     </div>
     <div class="preview-grid">
       ${["QB","RB","WR","TE"].map(pos=>rankingCard(pos,snap)).join("")}
