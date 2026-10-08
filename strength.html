@@ -28,6 +28,7 @@
   .badge { display:inline-block; padding:3px 8px; border-radius:999px; border:1px solid #454b57; font-size:11px; }
   .badge.live { color:#f6c453; border-color:#806b31; }
   .badge.locked { color:#55d187; border-color:#326b4a; }
+  .badge.legacy { color:#ffb86b; border-color:#8a5a28; }
   .preview-grid { display:grid; grid-template-columns:repeat(4,minmax(220px,1fr)); }
   .rank-card { padding:12px; border-right:1px solid #252a33; }
   .rank-card:last-child { border-right:0; }
@@ -49,24 +50,25 @@
   th:first-child { z-index:4; }
   tr.total td { font-weight:800; background:#151922; }
   td.locked-cell { cursor:pointer; font-weight:800; color:#dfe7ff; }
-  td.delta-up-1 { background:rgba(46,160,67,.22); }
-  td.delta-up-2 { background:rgba(46,160,67,.42); }
-  td.delta-up-3 { background:rgba(46,160,67,.42); }
-  td.delta-up-4 { background:rgba(46,160,67,.52); }
-  td.delta-up-5 { background:rgba(46,160,67,.72); }
+  td.delta-up-1 { background:rgba(46,160,67,.20); }
+  td.delta-up-2 { background:rgba(46,160,67,.30); }
+  td.delta-up-3 { background:rgba(46,160,67,.40); }
+  td.delta-up-4 { background:rgba(46,160,67,.50); }
+  td.delta-up-5 { background:rgba(46,160,67,.60); }
   td.delta-up-6 { background:rgba(46,160,67,.72); }
-  td.delta-down-1 { background:rgba(248,81,73,.22); }
-  td.delta-down-2 { background:rgba(248,81,73,.42); }
-  td.delta-down-3 { background:rgba(248,81,73,.42); }
-  td.delta-down-4 { background:rgba(248,81,73,.52); }
-  td.delta-down-5 { background:rgba(248,81,73,.72); }
+  td.delta-down-1 { background:rgba(248,81,73,.20); }
+  td.delta-down-2 { background:rgba(248,81,73,.30); }
+  td.delta-down-3 { background:rgba(248,81,73,.40); }
+  td.delta-down-4 { background:rgba(248,81,73,.50); }
+  td.delta-down-5 { background:rgba(248,81,73,.60); }
   td.delta-down-6 { background:rgba(248,81,73,.72); }
-  td.locked-cell:hover { background:#242b37; }
+  td.locked-cell:hover,td.live-cell:hover { filter:brightness(1.12); }
   td.live-cell { color:#f6c453; font-weight:800; }
   .audit { margin-top:18px; border:1px solid #303540; border-radius:10px; background:#171b22; overflow:hidden; }
   .audit-head { padding:10px 12px; background:#1b1f27; border-bottom:1px solid #303540; font-weight:800; }
   .audit-body { padding:10px 12px; font-size:13px; line-height:1.55; }
   .audit-player { display:inline-block; margin:3px 6px 3px 0; padding:3px 7px; border:1px solid #3a404c; border-radius:999px; }
+  .metric-note { color:#9ea5b1; font-size:11px; font-weight:400; margin-top:3px; }
   .foot { margin-top:16px; color:#8f96a3; font-size:11px; line-height:1.5; }
   #importFile { display:none; }
   @media(max-width:1100px){
@@ -83,7 +85,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v1.3</span></div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.0</span></div>
 
   <div class="notice">
     <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
@@ -97,6 +99,13 @@
     <div class="control">
       <label for="weekSelect">Week</label>
       <select id="weekSelect"></select>
+    </div>
+    <div class="control">
+      <label for="metricSelect">History Metric</label>
+      <select id="metricSelect">
+        <option value="count" selected>Count</option>
+        <option value="strength">Strength Score</option>
+      </select>
     </div>
     <button id="refresh">Refresh Sleeper Data</button>
     <button id="calculate" class="secondary">Calculate Week</button>
@@ -119,7 +128,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 18 QB, Top 25 RB, Top 25 WR and Top 18 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR counts, matching the original spreadsheet logic. The sixth section, Top 86 QB/RB/WR/TE, is the sum of the four separate positional counts (18 QB + 25 RB + 25 WR + 18 TE = 86) and is shown in addition to the Top 50 RB/WR section. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week: green for increases, red for decreases, with progressively darker shades through ±6. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week.
+    Rankings: Top 25 QB, Top 25 RB, Top 25 WR and Top 25 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR pools. Top 100 QB/RB/WR/TE is the sum of all four Top-25 pools. Count measures how many qualifying players each manager owns. Strength Score weights rank within each Top-25 pool: #1 = 25 points, #2 = 24 ... #25 = 1. Available league-wide strength is 325 points per position, 650 for RB/WR, and 1,300 for all four positions. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week using the currently selected History Metric. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week. Legacy locks from the prior 18/25/25/18 methodology remain visible until deliberately recalculated and replaced.
   </div>
 </div>
 
@@ -127,9 +136,11 @@
 const LEAGUES=["1399909125441224704","1399913391677554688"];
 const API="https://api.sleeper.app/v1";
 const STATS_API="https://api.sleeper.com/stats/nfl";
-const CATEGORIES={QB:18,RB:25,WR:25,TE:18};
+const CATEGORIES={QB:25,RB:25,WR:25,TE:25};
 const CATEGORY_ORDER=["QB","RB","WR","TE","RBWR","ALL4"];
-const CATEGORY_TITLES={QB:"Top 18 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 18 TE",RBWR:"Top 50 RB/WR",ALL4:"Top 86 QB/RB/WR/TE"};
+const CATEGORY_TITLES={QB:"Top 25 QB",RB:"Top 25 RB",WR:"Top 25 WR",TE:"Top 25 TE",RBWR:"Top 50 RB/WR",ALL4:"Top 100 QB/RB/WR/TE"};
+const COUNT_TARGETS={QB:25,RB:25,WR:25,TE:25,RBWR:50,ALL4:100};
+const STRENGTH_TARGETS={QB:325,RB:325,WR:325,TE:325,RBWR:650,ALL4:1300};
 
 let currentSeason=2026;
 let currentWeek=1;
@@ -342,16 +353,32 @@ function calculateSnapshot(leagueIndex,week){
   }
 
   const counts={};
+  const strength_scores={};
+  const blankAggregate=()=>({QB:0,RB:0,WR:0,TE:0,RBWR:0,ALL4:0});
+
   for(const row of ownership.rows){
-    counts[row.key]={QB:0,RB:0,WR:0,TE:0,RBWR:0};
+    counts[row.key]=blankAggregate();
+    strength_scores[row.key]=blankAggregate();
   }
+
   for(const pos of ["QB","RB","WR","TE"]){
     for(const p of rankings[pos]){
-      if(!counts[p.owner_key]) counts[p.owner_key]={QB:0,RB:0,WR:0,TE:0,RBWR:0};
+      if(!counts[p.owner_key]) counts[p.owner_key]=blankAggregate();
+      if(!strength_scores[p.owner_key]) strength_scores[p.owner_key]=blankAggregate();
+
       counts[p.owner_key][pos]++;
+      strength_scores[p.owner_key][pos]+=(26-p.rank);
     }
   }
-  for(const row of Object.values(counts)) row.RBWR=row.RB+row.WR;
+
+  for(const row of Object.values(counts)){
+    row.RBWR=row.RB+row.WR;
+    row.ALL4=row.QB+row.RB+row.WR+row.TE;
+  }
+  for(const row of Object.values(strength_scores)){
+    row.RBWR=row.RB+row.WR;
+    row.ALL4=row.QB+row.RB+row.WR+row.TE;
+  }
 
   return {
     season:currentSeason,
@@ -360,12 +387,16 @@ function calculateSnapshot(leagueIndex,week){
     league_id:info.id,
     league_name:info.league.name||`League ${leagueIndex+1}`,
     basis:"season_to_date_ppg",
+    methodology_version:2,
+    ranking_limits:{QB:25,RB:25,WR:25,TE:25},
     exclude_reserve:true,
     minimum_games_required:minGames,
     minimum_games_rule:"ceil(60% of weeks elapsed), capped at 4 games",
+    strength_score_rule:"#1=25, #2=24, ... #25=1 within each position",
     roster_snapshot_note:"Ownership and reserve/IR status reflect the Sleeper roster state when this week was calculated.",
     rows:ownership.rows,
     counts,
+    strength_scores,
     rankings
   };
 }
@@ -418,11 +449,14 @@ function renderPreview(){
     return;
   }
 
+  const legacy=!isTop25Snapshot(snap);
+
   $("preview").innerHTML=`<div class="preview">
     <div class="preview-head">
       <strong>${esc(snap.league_name)} · Week ${week}</strong>
       <span class="badge ${live?"live":"locked"}">${live?"LIVE / UNLOCKED":"LOCKED"}</span>
-      <span class="muted">Season-to-date PPG through Week ${week} · minimum ${snap.minimum_games_required ?? minimumGamesForWeek(week)} games played</span>
+      ${legacy ? `<span class="badge legacy">LEGACY 18/25/25/18</span>` : ""}
+      <span class="muted">Season-to-date PPG through Week ${week} · minimum ${snap.minimum_games_required ?? minimumGamesForWeek(week)} games played${legacy ? " · recalculate and replace this lock for the Top-25-all-positions methodology" : ""}</span>
     </div>
     <div class="preview-grid">
       ${["QB","RB","WR","TE"].map(pos=>rankingCard(pos,snap)).join("")}
@@ -452,12 +486,60 @@ function countFromSnapshot(snap,rowKey,cat){
   if(!snap) return null;
   const row=snap.counts?.[rowKey]||{};
 
-  // Derived display metric. It is intentionally NOT written to JSON,
-  // so older locked weeks remain fully compatible.
   if(cat==="ALL4")
-    return num(row.QB)+num(row.RB)+num(row.WR)+num(row.TE);
+    return row.ALL4 ?? (num(row.QB)+num(row.RB)+num(row.WR)+num(row.TE));
+
+  if(cat==="RBWR")
+    return row.RBWR ?? (num(row.RB)+num(row.WR));
 
   return row[cat] ?? 0;
+}
+
+function isTop25Snapshot(snap){
+  if(!snap) return false;
+  const limits=snap.ranking_limits;
+  if(limits)
+    return ["QB","RB","WR","TE"].every(pos=>Number(limits[pos])===25);
+
+  return ["QB","RB","WR","TE"].every(pos=>(snap.rankings?.[pos]||[]).length===25);
+}
+
+function scoreForRank(rank){
+  const r=Number(rank);
+  return Number.isFinite(r) && r>=1 && r<=25 ? 26-r : 0;
+}
+
+function strengthScoreFromSnapshot(snap,rowKey,cat){
+  if(!snap || !isTop25Snapshot(snap)) return null;
+
+  const stored=snap.strength_scores?.[rowKey];
+  if(stored && stored[cat] != null) return Number(stored[cat]);
+
+  const positions=cat==="RBWR" ? ["RB","WR"]
+    : cat==="ALL4" ? ["QB","RB","WR","TE"]
+    : [cat];
+
+  let total=0;
+  for(const pos of positions){
+    for(const p of snap.rankings?.[pos]||[]){
+      if(p.owner_key===rowKey) total+=scoreForRank(p.rank);
+    }
+  }
+  return total;
+}
+
+function selectedMetric(){
+  return $("metricSelect")?.value==="strength" ? "strength" : "count";
+}
+
+function metricValueFromSnapshot(snap,rowKey,cat,metric=selectedMetric()){
+  return metric==="strength"
+    ? strengthScoreFromSnapshot(snap,rowKey,cat)
+    : countFromSnapshot(snap,rowKey,cat);
+}
+
+function metricTarget(cat,metric=selectedMetric()){
+  return metric==="strength" ? STRENGTH_TARGETS[cat] : COUNT_TARGETS[cat];
 }
 
 function previousLockedWeek(index,week){
@@ -468,15 +550,15 @@ function previousLockedWeek(index,week){
   return weeks.length ? weeks[weeks.length-1] : null;
 }
 
-function deltaInfoForSnapshot(index,week,currentSnap,rowKey,cat){
+function deltaInfoForSnapshot(index,week,currentSnap,rowKey,cat,metric=selectedMetric()){
   const prevWeek=previousLockedWeek(index,week);
   if(prevWeek==null || !currentSnap) return null;
 
   const previous=lockedSnapshot(index,prevWeek);
   if(!previous) return null;
 
-  const currentValue=countFromSnapshot(currentSnap,rowKey,cat);
-  const previousValue=countFromSnapshot(previous,rowKey,cat);
+  const currentValue=metricValueFromSnapshot(currentSnap,rowKey,cat,metric);
+  const previousValue=metricValueFromSnapshot(previous,rowKey,cat,metric);
   if(currentValue==null || previousValue==null) return null;
 
   return {
@@ -485,24 +567,32 @@ function deltaInfoForSnapshot(index,week,currentSnap,rowKey,cat){
   };
 }
 
-function deltaInfoFor(index,week,rowKey,cat){
-  return deltaInfoForSnapshot(index,week,lockedSnapshot(index,week),rowKey,cat);
+function deltaInfoFor(index,week,rowKey,cat,metric=selectedMetric()){
+  return deltaInfoForSnapshot(index,week,lockedSnapshot(index,week),rowKey,cat,metric);
 }
 
-function deltaClass(delta){
+function deltaClass(delta,metric=selectedMetric()){
   if(delta==null || delta===0) return "";
-  const level=Math.min(6,Math.max(1,Math.abs(Math.trunc(delta))));
+
+  let level;
+  if(metric==="strength"){
+    // Strength can move by several rank points even when the player count is unchanged.
+    level=Math.min(6,Math.max(1,Math.ceil(Math.abs(delta)/5)));
+  }else{
+    level=Math.min(6,Math.max(1,Math.abs(Math.trunc(delta))));
+  }
+
   return delta>0 ? `delta-up-${level}` : `delta-down-${level}`;
 }
 
-function deltaTitle(info){
+function deltaTitle(info,metric=selectedMetric()){
   if(!info || info.delta===0) return "";
   const sign=info.delta>0?"+":"";
-  return `${sign}${info.delta} from Week ${info.prevWeek}`;
+  const unit=metric==="strength" ? " strength points" : "";
+  return `${sign}${info.delta}${unit} from Week ${info.prevWeek}`;
 }
 
 function livePreviewFor(index,week){
-  if(lockedSnapshot(index,week)) return null;
   return previewCache.get(previewKey(index,week))||null;
 }
 
@@ -511,25 +601,35 @@ function historyTable(cat,index){
   const selected=selectedWeek();
   const selectedLive=livePreviewFor(index,selected);
   const title=CATEGORY_TITLES[cat];
-  const target=cat==="QB"||cat==="TE"?18:cat==="RBWR"?50:cat==="ALL4"?86:25;
+  const metric=selectedMetric();
+  const target=metricTarget(cat,metric);
+  const metricLabel=metric==="strength" ? "Strength Score" : "Count";
 
   const weekHeaders=Array.from({length:18},(_,i)=>`<th>${i+1}</th>`).join("");
   const body=rows.map(row=>{
     const cells=Array.from({length:18},(_,i)=>{
       const week=i+1;
       const locked=lockedSnapshot(index,week);
+      const live=(selectedLive && week===selected) ? selectedLive : null;
+
+      if(live){
+        const v=metricValueFromSnapshot(live,row.key,cat,metric);
+        const info=deltaInfoForSnapshot(index,week,live,row.key,cat,metric);
+        const compareTitle=deltaTitle(info,metric);
+        const cellTitle=compareTitle ? `Live preview — not locked · ${compareTitle}` : "Live preview — not locked";
+        return `<td class="live-cell ${deltaClass(info?.delta,metric)}" title="${esc(cellTitle)}">${v==null?"—":v}</td>`;
+      }
+
       if(locked){
-        const v=countFromSnapshot(locked,row.key,cat);
-        const info=deltaInfoFor(index,week,row.key,cat);
-        return `<td class="locked-cell ${deltaClass(info?.delta)}" title="${esc(deltaTitle(info))}" data-week="${week}" data-row="${esc(row.key)}" data-cat="${cat}">${v}</td>`;
+        const legacy=!isTop25Snapshot(locked);
+        const v=metricValueFromSnapshot(locked,row.key,cat,metric);
+        const info=deltaInfoFor(index,week,row.key,cat,metric);
+        const changeTitle=deltaTitle(info,metric);
+        const legacyTitle=legacy ? "Legacy 18/25/25/18 lock — recalculate and replace for Top 25 at all four positions" : "";
+        const cellTitle=[legacyTitle,changeTitle].filter(Boolean).join(" · ");
+        return `<td class="locked-cell ${deltaClass(info?.delta,metric)}" title="${esc(cellTitle)}" data-week="${week}" data-row="${esc(row.key)}" data-cat="${cat}">${v==null?"—":v}</td>`;
       }
-      if(selectedLive && week===selected){
-        const v=countFromSnapshot(selectedLive,row.key,cat);
-        const info=deltaInfoForSnapshot(index,week,selectedLive,row.key,cat);
-        const compareTitle=deltaTitle(info);
-        const title=compareTitle ? `Live preview — not locked · ${compareTitle}` : "Live preview — not locked";
-        return `<td class="live-cell ${deltaClass(info?.delta)}" title="${esc(title)}">${v}</td>`;
-      }
+
       return `<td></td>`;
     }).join("");
     return `<tr><td title="${esc(row.team_label||row.label)}">${esc(row.label)}</td>${cells}</tr>`;
@@ -538,24 +638,34 @@ function historyTable(cat,index){
   const totals=Array.from({length:18},(_,i)=>{
     const week=i+1;
     const locked=lockedSnapshot(index,week);
-    if(locked){
-      const total=rows.reduce((s,r)=>s+num(countFromSnapshot(locked,r.key,cat)),0);
-      return `<td>${total}</td>`;
-    }
-    if(selectedLive && week===selected){
-      const total=rows.reduce((s,r)=>s+num(countFromSnapshot(selectedLive,r.key,cat)),0);
-      return `<td class="live-cell">${total}</td>`;
+    const live=(selectedLive && week===selected) ? selectedLive : null;
+    const snap=live||locked;
+
+    if(snap){
+      const values=rows.map(r=>metricValueFromSnapshot(snap,r.key,cat,metric));
+      if(values.every(v=>v==null)) return `<td class="${live?"live-cell":""}">—</td>`;
+      const total=values.reduce((s,v)=>s+(v==null?0:num(v)),0);
+      return `<td class="${live?"live-cell":""}">${total}</td>`;
     }
     return `<td></td>`;
   }).join("");
+
+  const subtitle=cat==="ALL4"
+    ? `25 QB + 25 RB + 25 WR + 25 TE`
+    : cat==="RBWR"
+      ? `25 RB + 25 WR`
+      : `Rank-weighted pool: #1 = 25 pts ... #25 = 1 pt`;
 
   return `<div class="history-card ${["RBWR","ALL4"].includes(cat)?"wide":""}">
     <div class="history-title">
       <div>
         <div>${title}</div>
-        ${cat==="ALL4" ? `<div class="history-subtitle">18 QB + 25 RB + 25 WR + 18 TE</div>` : ""}
+        <div class="history-subtitle">${subtitle}</div>
       </div>
-      <span class="muted">Expected total ${target}</span>
+      <div style="text-align:right">
+        <div class="muted">${metricLabel}</div>
+        <div class="metric-note">League total ${target}</div>
+      </div>
     </div>
     <div class="tablebox"><table>
       <thead><tr><th>Manager</th>${weekHeaders}</tr></thead>
@@ -593,9 +703,13 @@ function showAudit(index,week,rowKey,cat){
   const row=(snap.rows||[]).find(r=>r.key===rowKey)||{label:rowKey};
   const list=playersForOwnerAndCategory(snap,rowKey,cat);
   $("audit").style.display="block";
+  const metric=selectedMetric();
   $("auditHead").textContent=`${snap.league_name} · Week ${week} · ${CATEGORY_TITLES[cat]} · ${row.label}`;
   $("auditBody").innerHTML=list.length
-    ? list.map(p=>`<span class="audit-player">${cat==="ALL4"?`${esc(p.position)} `:""}#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG</span>`).join("")
+    ? list.map(p=>{
+        const contribution=(metric==="strength" && isTop25Snapshot(snap)) ? ` · ${scoreForRank(p.rank)} strength pts` : "";
+        return `<span class="audit-player">${["RBWR","ALL4"].includes(cat)?`${esc(p.position)} `:""}#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG${contribution}</span>`;
+      }).join("")
     : `<span class="muted">No players from this row were in the locked ${CATEGORY_TITLES[cat]}.</span>`;
   $("audit").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -624,6 +738,7 @@ function lockSelected(){
   const leagueHist=ensureHistoryLeague(index);
   leagueHist.weeks[String(week)]={...snap,locked_at:new Date().toISOString()};
   history.updated_at=new Date().toISOString();
+  previewCache.delete(previewKey(index,week));
   renderPreview();
   renderHistory();
   downloadHistory();
@@ -732,6 +847,7 @@ async function refreshAll(){
 
 $("leagueSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
 $("weekSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("metricSelect").addEventListener("change",()=>{ renderHistory(); $("audit").style.display="none"; });
 $("refresh").addEventListener("click",refreshAll);
 $("calculate").addEventListener("click",()=>calculateSelected(true));
 $("lock").addEventListener("click",lockSelected);
@@ -745,6 +861,7 @@ $("importFile").addEventListener("change",async e=>{
     const data=JSON.parse(await file.text());
     if(!data || typeof data!=="object" || !data.leagues) throw new Error("Invalid strength-history.json structure");
     history=data;
+    previewCache=new Map();
     renderPreview();
     renderHistory();
     updateButtons();
