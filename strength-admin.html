@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>League Strength Tracker</title>
+<title>League Strength Tracker Admin</title>
 <style>
   :root { color-scheme:dark; }
   * { box-sizing:border-box; }
@@ -101,11 +101,11 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.2</span></div>
+  <h1>League Strength Tracker Admin</h1>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.2 Admin</span></div>
 
   <div class="notice">
-    <strong>Official league view:</strong> This page displays only commissioner-locked snapshots from <code>strength-history.json</code>. Select a league, locked week, and history metric to explore the results.
+    <strong>Admin view:</strong> Calculate and lock official weekly snapshots here. Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>; replace the repository copy to publish the updated data. This page is not access-controlled, so keep the URL for commissioner/admin use even though visitors cannot modify the GitHub repository without write access.
   </div>
 
   <div class="controls">
@@ -114,7 +114,7 @@
       <select id="leagueSelect"><option>Loading…</option></select>
     </div>
     <div class="control">
-      <label for="weekSelect">Locked Week</label>
+      <label for="weekSelect">Week</label>
       <select id="weekSelect"></select>
     </div>
     <div class="control">
@@ -124,6 +124,13 @@
         <option value="strength">Strength Score</option>
       </select>
     </div>
+    <button id="refresh">Refresh Sleeper Data</button>
+    <button id="calculate" class="secondary">Calculate Week</button>
+    <button id="lock">Lock Week + Download JSON</button>
+    <button id="unlock" class="danger">Unlock Week</button>
+    <button id="download" class="secondary">Download Current JSON</button>
+    <button id="import" class="secondary">Import JSON</button>
+    <input id="importFile" type="file" accept="application/json,.json">
   </div>
 
   <div id="status" class="status"></div>
@@ -140,7 +147,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 25 QB, Top 25 RB, Top 25 WR and Top 25 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR pools. Top 100 QB/RB/WR/TE is the sum of all four Top-25 pools. Count measures how many qualifying players each manager owns. Strength Score weights rank within each Top-25 pool: #1 = 25 points, #2 = 24 ... #25 = 1. Available league-wide strength is 325 points per position, 650 for RB/WR, and 1,300 for all four positions. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. Locked history cells are shaded against the immediately previous locked week using the currently selected History Metric. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week. The Week Strength Summary ranks managers by the combined Top-100 Strength Score while also showing the Top-100 player count. Legacy locks from the prior 18/25/25/18 methodology, if present, are labeled as legacy.
+    Rankings: Top 25 QB, Top 25 RB, Top 25 WR and Top 25 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR pools. Top 100 QB/RB/WR/TE is the sum of all four Top-25 pools. Count measures how many qualifying players each manager owns. Strength Score weights rank within each Top-25 pool: #1 = 25 points, #2 = 24 ... #25 = 1. Available league-wide strength is 325 points per position, 650 for RB/WR, and 1,300 for all four positions. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week using the currently selected History Metric. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week. The Week Strength Summary ranks managers by the combined Top-100 Strength Score while also showing the Top-100 player count. Legacy locks from the prior 18/25/25/18 methodology remain visible until deliberately recalculated and replaced.
   </div>
 </div>
 
@@ -452,10 +459,13 @@ function rankingCard(pos,snap){
 
 function renderPreview(){
   const index=selectedLeagueIndex(), week=selectedWeek();
-  const snap=lockedSnapshot(index,week);
+  const locked=lockedSnapshot(index,week);
+  const live=previewCache.get(previewKey(index,week));
+  const snap=live||locked;
 
   if(!snap){
-    $("preview").innerHTML=`<div class="preview"><div class="preview-head"><span class="muted">No official locked snapshot is available for this week.</span></div></div>`;
+    $("preview").innerHTML=`<div class="preview"><div class="preview-head"><span class="muted">No preview calculated for this week yet.</span></div></div>`;
+    updateButtons();
     return;
   }
 
@@ -464,27 +474,28 @@ function renderPreview(){
   $("preview").innerHTML=`<div class="preview">
     <div class="preview-head">
       <strong>${esc(snap.league_name)} · Week ${week}</strong>
-      <span class="badge locked">LOCKED</span>
+      <span class="badge ${live?"live":"locked"}">${live?"LIVE / UNLOCKED":"LOCKED"}</span>
       ${legacy ? `<span class="badge legacy">LEGACY 18/25/25/18</span>` : ""}
-      <span class="muted">Season-to-date PPG through Week ${week} · minimum ${snap.minimum_games_required ?? minimumGamesForWeek(week)} games played</span>
+      <span class="muted">Season-to-date PPG through Week ${week} · minimum ${snap.minimum_games_required ?? minimumGamesForWeek(week)} games played${legacy ? " · recalculate and replace this lock for the Top-25-all-positions methodology" : ""}</span>
     </div>
     <div class="preview-grid">
       ${["QB","RB","WR","TE"].map(pos=>rankingCard(pos,snap)).join("")}
     </div>
   </div>`;
+  updateButtons();
 }
 
 function allDisplayRows(index){
-  const id=LEAGUES[index];
-  const leagueHist=history?.leagues?.[id]?.weeks||{};
-  const seen=new Map();
-
+  const info=leagues[index];
+  if(!info) return [];
+  const current=buildOwnership(info).rows;
+  const seen=new Map(current.map(r=>[r.key,r]));
+  const leagueHist=history?.leagues?.[info.id]?.weeks||{};
   for(const snap of Object.values(leagueHist)){
     for(const row of snap.rows||[]){
       if(!seen.has(row.key)) seen.set(row.key,row);
     }
   }
-
   const vals=[...seen.values()].filter(r=>r.key!=="FA");
   vals.sort((a,b)=>a.label.localeCompare(b.label,undefined,{sensitivity:"base"}));
   vals.push(seen.get("FA")||{key:"FA",label:"FA",team_label:"Free Agents"});
@@ -691,11 +702,12 @@ function selectedSnapshot(){
 
 function renderStrengthSummary(){
   const index=selectedLeagueIndex(), week=selectedWeek();
-  const snap=lockedSnapshot(index,week);
+  const live=previewCache.get(previewKey(index,week));
+  const snap=live || lockedSnapshot(index,week);
   const box=$("strengthSummary");
 
   if(!snap){
-    box.innerHTML=`<div class="summary-card"><div class="summary-head"><div><div class="summary-title">Week ${week} Strength Summary</div><div class="summary-subtitle">No official locked snapshot is available for this week.</div></div></div></div>`;
+    box.innerHTML=`<div class="summary-card"><div class="summary-head"><div><div class="summary-title">Week ${week} Strength Summary</div><div class="summary-subtitle">Calculate or lock this week to populate the summary.</div></div></div></div>`;
     return;
   }
 
@@ -749,7 +761,7 @@ function renderStrengthSummary(){
         <div class="summary-title">Week ${week} Strength Summary</div>
         <div class="summary-subtitle">Sorted by Top-100 Strength Score · positional scores are rank-weighted within each Top-25 pool</div>
       </div>
-      <span class="badge locked">LOCKED</span>
+      <span class="badge ${live?"live":"locked"}">${live?"LIVE / UNLOCKED":"LOCKED"}</span>
     </div>
     <div class="tablebox">
       <table class="summary-table">
@@ -890,74 +902,94 @@ async function loadHistory(){
 }
 
 function updateWeekOptions(){
-  const index=selectedLeagueIndex();
-  const id=LEAGUES[index];
   const current=$("weekSelect").value;
-  const weeks=Object.keys(history?.leagues?.[id]?.weeks||{})
-    .map(Number)
-    .filter(Number.isFinite)
-    .sort((a,b)=>a-b);
-
-  if(!weeks.length){
-    $("weekSelect").innerHTML=`<option value="1">No locked weeks</option>`;
-    $("weekSelect").disabled=true;
-    return;
-  }
-
-  $("weekSelect").disabled=false;
-  $("weekSelect").innerHTML=weeks.map(w=>`<option value="${w}">Week ${w}</option>`).join("");
-  if(current && weeks.includes(Number(current))) $("weekSelect").value=current;
-  else $("weekSelect").value=String(weeks[weeks.length-1]);
+  $("weekSelect").innerHTML=Array.from({length:Math.max(1,currentWeek)},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join("");
+  if(current && Number(current)<=currentWeek) $("weekSelect").value=current;
+  else $("weekSelect").value=String(currentWeek);
 }
 
 function updateLeagueOptions(){
   const current=$("leagueSelect").value;
-  $("leagueSelect").innerHTML=LEAGUES.map((id,i)=>{
-    const name=history?.leagues?.[id]?.league_name||`League ${i+1}`;
-    return `<option value="${i}">${esc(name)}</option>`;
-  }).join("");
+  $("leagueSelect").innerHTML=leagues.map((x,i)=>`<option value="${i}">${esc(x?.league?.name||`League ${i+1}`)}</option>`).join("");
   if(current==="0"||current==="1") $("leagueSelect").value=current;
 }
 
-async function loadPublic(){
-  $("status").textContent="Loading official locked strength history…";
+function updateButtons(){
+  const locked=!!lockedSnapshot(selectedLeagueIndex(),selectedWeek());
+  $("unlock").disabled=!locked;
+  $("lock").textContent=locked?"Replace Lock + Download JSON":"Lock Week + Download JSON";
+}
+
+async function refreshAll(){
+  $("status").textContent="Loading Sleeper leagues, players and weekly stats…";
   try{
     const historyMsg=await loadHistory();
+    const [state,playerMap]=await Promise.all([
+      getJson(`${API}/state/nfl`),
+      getJson(`${API}/players/nfl`),
+      loadLeague(0,LEAGUES[0]),
+      loadLeague(1,LEAGUES[1])
+    ]);
+
+    currentSeason=Number(state.season)||2026;
+    currentWeek=Number(state.week)||1;
+    players=new Map(Object.entries(playerMap||{}).map(([id,p])=>[String(id),{player_id:String(id),...p}]));
+
+    weeklyStats=new Map();
+    for(let week=1;week<=currentWeek;week++){
+      try{
+        const data=await getJson(`${STATS_API}/${currentSeason}/${week}?season_type=regular`);
+        weeklyStats.set(week,normalizeFeed(data));
+      }catch(e){
+        console.warn(`Week ${week} stats unavailable`,e);
+        weeklyStats.set(week,new Map());
+      }
+    }
+
+    previewCache=new Map();
     updateLeagueOptions();
     updateWeekOptions();
     renderPreview();
     renderStrengthSummary();
     renderHistory();
-
-    const updated=history?.updated_at ? new Date(history.updated_at).toLocaleString() : "unknown";
-    $("status").textContent=`${historyMsg}. Official history last updated ${updated}.`;
+    updateButtons();
+    $("status").textContent=`NFL ${currentSeason} · current Week ${currentWeek} · ${historyMsg}. Choose a week and Calculate Week.`;
   }catch(e){
     console.error(e);
-    $("status").textContent="Could not load the official strength tracker: "+e.message;
+    $("status").textContent="Could not load strength tracker: "+e.message;
   }
 }
 
-$("leagueSelect").addEventListener("change",()=>{
-  updateWeekOptions();
-  renderPreview();
-  renderStrengthSummary();
-  renderHistory();
-  $("audit").style.display="none";
+$("leagueSelect").addEventListener("change",()=>{ renderPreview(); renderStrengthSummary(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("weekSelect").addEventListener("change",()=>{ renderPreview(); renderStrengthSummary(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("metricSelect").addEventListener("change",()=>{ renderHistory(); $("audit").style.display="none"; });
+$("refresh").addEventListener("click",refreshAll);
+$("calculate").addEventListener("click",()=>calculateSelected(true));
+$("lock").addEventListener("click",lockSelected);
+$("unlock").addEventListener("click",unlockSelected);
+$("download").addEventListener("click",downloadHistory);
+$("import").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!data || typeof data!=="object" || !data.leagues) throw new Error("Invalid strength-history.json structure");
+    history=data;
+    previewCache=new Map();
+    renderPreview();
+    renderStrengthSummary();
+    renderHistory();
+    updateButtons();
+    $("status").textContent=`Imported ${file.name} into the working copy.`;
+  }catch(err){
+    $("status").textContent="Could not import JSON: "+err.message;
+  }finally{
+    e.target.value="";
+  }
 });
 
-$("weekSelect").addEventListener("change",()=>{
-  renderPreview();
-  renderStrengthSummary();
-  renderHistory();
-  $("audit").style.display="none";
-});
-
-$("metricSelect").addEventListener("change",()=>{
-  renderHistory();
-  $("audit").style.display="none";
-});
-
-loadPublic();
+refreshAll();
 </script>
 </body>
 </html>
