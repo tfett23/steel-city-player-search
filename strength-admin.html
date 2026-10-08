@@ -83,6 +83,8 @@
     max-width:64px;
   }
   .summary-overall { font-weight:800; }
+  .summary-clickable { cursor:pointer; }
+  .summary-clickable:hover { background:#242b37; text-decoration:underline; text-underline-offset:2px; }
   .summary-fa td { border-top:2px solid #4a5160; color:#b9c0cc; }
   .summary-empty { padding:14px; color:#9ea5b1; }
 
@@ -102,7 +104,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker Admin</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.2 Admin</span></div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.2.1 Admin</span></div>
 
   <div class="notice">
     <strong>Admin view:</strong> Calculate and lock official weekly snapshots here. Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>; replace the repository copy to publish the updated data. This page is not access-controlled, so keep the URL for commissioner/admin use even though visitors cannot modify the GitHub repository without write access.
@@ -746,13 +748,13 @@ function renderStrengthSummary(){
 
   const rowHtml=r=>`<tr${r.key==="FA"?' class="summary-fa"':""}>
     <td class="summary-rank">${r.key==="FA"?"—":r.rank}</td>
-    <td title="${esc(r.team_label||r.label)}">${esc(r.label)}</td>
-    <td>${r.qb}</td>
-    <td>${r.rb}</td>
-    <td>${r.wr}</td>
-    <td>${r.te}</td>
-    <td class="summary-overall">${r.overall}</td>
-    <td>${r.count}</td>
+    <td class="summary-clickable" title="Show all qualifying players for ${esc(r.team_label||r.label)}" data-summary-row="${esc(r.key)}" data-summary-cat="ALL4">${esc(r.label)}</td>
+    <td class="summary-clickable" title="Show qualifying QBs" data-summary-row="${esc(r.key)}" data-summary-cat="QB">${r.qb}</td>
+    <td class="summary-clickable" title="Show qualifying RBs" data-summary-row="${esc(r.key)}" data-summary-cat="RB">${r.rb}</td>
+    <td class="summary-clickable" title="Show qualifying WRs" data-summary-row="${esc(r.key)}" data-summary-cat="WR">${r.wr}</td>
+    <td class="summary-clickable" title="Show qualifying TEs" data-summary-row="${esc(r.key)}" data-summary-cat="TE">${r.te}</td>
+    <td class="summary-overall summary-clickable" title="Show all qualifying Top-100 players" data-summary-row="${esc(r.key)}" data-summary-cat="ALL4">${r.overall}</td>
+    <td class="summary-clickable" title="Show all qualifying Top-100 players" data-summary-row="${esc(r.key)}" data-summary-cat="ALL4">${r.count}</td>
   </tr>`;
 
   box.innerHTML=`<div class="summary-card">
@@ -825,6 +827,31 @@ function showAudit(index,week,rowKey,cat){
     : `<span class="muted">No players from this row were in the locked ${CATEGORY_TITLES[cat]}.</span>`;
   $("audit").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
+
+function showSummaryAudit(rowKey,cat){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  const snap=previewCache.get(previewKey(index,week)) || lockedSnapshot(index,week);
+  if(!snap) return;
+
+  const row=(snap.rows||[]).find(r=>r.key===rowKey)||{label:rowKey};
+  const list=playersForOwnerAndCategory(snap,rowKey,cat);
+
+  $("audit").style.display="block";
+  $("auditHead").textContent=`${snap.league_name} · Week ${week} · ${CATEGORY_TITLES[cat]} · ${row.label}`;
+  $("auditBody").innerHTML=list.length
+    ? list.map(p=>{
+        const contribution=isTop25Snapshot(snap) ? ` · ${scoreForRank(p.rank)} strength pts` : "";
+        return `<span class="audit-player">${cat==="ALL4"?`${esc(p.position)} `:""}#${p.rank} ${esc(p.name)} · ${p.ppg.toFixed(2)} PPG${contribution}</span>`;
+      }).join("")
+    : `<span class="muted">No qualifying players from this row were in ${CATEGORY_TITLES[cat]}.</span>`;
+  $("audit").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+$("strengthSummary").addEventListener("click",e=>{
+  const cell=e.target.closest("[data-summary-row][data-summary-cat]");
+  if(!cell) return;
+  showSummaryAudit(cell.dataset.summaryRow,cell.dataset.summaryCat);
+});
 
 function ensureHistoryLeague(index){
   const info=leagues[index];
