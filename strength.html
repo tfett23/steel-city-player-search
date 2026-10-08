@@ -69,6 +69,17 @@
   .audit-body { padding:10px 12px; font-size:13px; line-height:1.55; }
   .audit-player { display:inline-block; margin:3px 6px 3px 0; padding:3px 7px; border:1px solid #3a404c; border-radius:999px; }
   .metric-note { color:#9ea5b1; font-size:11px; font-weight:400; margin-top:3px; }
+  .summary-card { border:1px solid #303540; border-radius:10px; background:#171b22; margin:16px 0 22px; overflow:hidden; }
+  .summary-head { padding:11px 14px; background:#1b1f27; border-bottom:1px solid #303540; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; }
+  .summary-title { font-weight:700; }
+  .summary-subtitle { color:#9ea5b1; font-size:12px; margin-top:2px; }
+  .summary-table th,.summary-table td { text-align:right; white-space:nowrap; }
+  .summary-table th:nth-child(2),.summary-table td:nth-child(2) { text-align:left; }
+  .summary-rank { font-weight:700; text-align:center !important; }
+  .summary-overall { font-weight:800; }
+  .summary-fa td { border-top:2px solid #4a5160; color:#b9c0cc; }
+  .summary-empty { padding:14px; color:#9ea5b1; }
+
   .foot { margin-top:16px; color:#8f96a3; font-size:11px; line-height:1.5; }
   #importFile { display:none; }
   @media(max-width:1100px){
@@ -85,7 +96,7 @@
 <body>
 <div class="wrap">
   <h1>League Strength Tracker</h1>
-  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.0</span></div>
+  <div class="sub">Weekly roster-strength history based on season-to-date fantasy points per game. <span class="muted">Strength Tracker v2.1</span></div>
 
   <div class="notice">
     <strong>Persistence:</strong> Lock Week updates this page's working copy and downloads a replacement <code>strength-history.json</code>. Replace the JSON file in the GitHub repository to make the lock permanent across devices. This page is intentionally unlinked from the public player-search page, but an unlinked GitHub Pages URL is not truly private.
@@ -119,6 +130,8 @@
   <div id="status" class="status"></div>
   <div id="preview"></div>
 
+  <div id="strengthSummary"></div>
+
   <h2>Locked Weekly History</h2>
   <div id="history" class="history-sections"></div>
 
@@ -128,7 +141,7 @@
   </div>
 
   <div class="foot">
-    Rankings: Top 25 QB, Top 25 RB, Top 25 WR and Top 25 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR pools. Top 100 QB/RB/WR/TE is the sum of all four Top-25 pools. Count measures how many qualifying players each manager owns. Strength Score weights rank within each Top-25 pool: #1 = 25 points, #2 = 24 ... #25 = 1. Available league-wide strength is 325 points per position, 650 for RB/WR, and 1,300 for all four positions. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week using the currently selected History Metric. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week. Legacy locks from the prior 18/25/25/18 methodology remain visible until deliberately recalculated and replaced.
+    Rankings: Top 25 QB, Top 25 RB, Top 25 WR and Top 25 TE by season-to-date PPG through the selected week, after applying a minimum-games requirement of 60% of weeks elapsed (rounded up, capped at 4 games). Top 50 RB/WR is the sum of the Top 25 RB and Top 25 WR pools. Top 100 QB/RB/WR/TE is the sum of all four Top-25 pools. Count measures how many qualifying players each manager owns. Strength Score weights rank within each Top-25 pool: #1 = 25 points, #2 = 24 ... #25 = 1. Available league-wide strength is 325 points per position, 650 for RB/WR, and 1,300 for all four positions. A played 0.0 counts toward PPG; bye/DNP weeks do not. Players occupying a Sleeper reserve/IR slot at calculation time are excluded. Free agents are counted in the FA row. History and live/unlocked cells are shaded against the immediately previous locked week using the currently selected History Metric. The first recorded week stays neutral; hover a changed cell to see the exact change and comparison week. The Week Strength Summary ranks managers by the combined Top-100 Strength Score while also showing the Top-100 player count. Legacy locks from the prior 18/25/25/18 methodology remain visible until deliberately recalculated and replaced.
   </div>
 </div>
 
@@ -416,6 +429,7 @@ function calculateSelected(showStatus=true){
   const snap=calculateSnapshot(index,week);
   previewCache.set(previewKey(index,week),snap);
   renderPreview();
+  renderStrengthSummary();
   renderHistory();
   if(showStatus) $("status").textContent=`Calculated ${snap.league_name} Week ${week}. This is a live preview until you lock it.`;
   return snap;
@@ -674,6 +688,98 @@ function historyTable(cat,index){
   </div>`;
 }
 
+
+function selectedSnapshot(){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  return previewCache.get(previewKey(index,week)) || lockedSnapshot(index,week) || null;
+}
+
+function renderStrengthSummary(){
+  const index=selectedLeagueIndex(), week=selectedWeek();
+  const live=previewCache.get(previewKey(index,week));
+  const snap=live || lockedSnapshot(index,week);
+  const box=$("strengthSummary");
+
+  if(!snap){
+    box.innerHTML=`<div class="summary-card"><div class="summary-head"><div><div class="summary-title">Week ${week} Strength Summary</div><div class="summary-subtitle">Calculate or lock this week to populate the summary.</div></div></div></div>`;
+    return;
+  }
+
+  if(!isTop25Snapshot(snap)){
+    box.innerHTML=`<div class="summary-card"><div class="summary-head"><div><div class="summary-title">Week ${week} Strength Summary</div><div class="summary-subtitle">Unavailable for this legacy 18/25/25/18 snapshot. Recalculate and replace the lock under the Top-25-all-positions methodology.</div></div></div></div>`;
+    return;
+  }
+
+  const rows=(snap.rows||[]).map(r=>({
+    ...r,
+    qb:strengthScoreFromSnapshot(snap,r.key,"QB"),
+    rb:strengthScoreFromSnapshot(snap,r.key,"RB"),
+    wr:strengthScoreFromSnapshot(snap,r.key,"WR"),
+    te:strengthScoreFromSnapshot(snap,r.key,"TE"),
+    overall:strengthScoreFromSnapshot(snap,r.key,"ALL4"),
+    count:countFromSnapshot(snap,r.key,"ALL4")
+  }));
+
+  const managers=rows
+    .filter(r=>r.key!=="FA")
+    .sort((a,b)=>
+      num(b.overall)-num(a.overall) ||
+      num(b.count)-num(a.count) ||
+      String(a.label).localeCompare(String(b.label),undefined,{sensitivity:"base"})
+    );
+
+  let lastScore=null, lastRank=0;
+  const ranked=managers.map((r,i)=>{
+    const rank=(lastScore!==null && num(r.overall)===lastScore) ? lastRank : i+1;
+    lastScore=num(r.overall);
+    lastRank=rank;
+    return {...r,rank};
+  });
+
+  const fa=rows.find(r=>r.key==="FA");
+
+  const rowHtml=r=>`<tr${r.key==="FA"?' class="summary-fa"':""}>
+    <td class="summary-rank">${r.key==="FA"?"—":r.rank}</td>
+    <td title="${esc(r.team_label||r.label)}">${esc(r.label)}</td>
+    <td>${r.qb}</td>
+    <td>${r.rb}</td>
+    <td>${r.wr}</td>
+    <td>${r.te}</td>
+    <td class="summary-overall">${r.overall}</td>
+    <td>${r.count}</td>
+  </tr>`;
+
+  box.innerHTML=`<div class="summary-card">
+    <div class="summary-head">
+      <div>
+        <div class="summary-title">Week ${week} Strength Summary</div>
+        <div class="summary-subtitle">Sorted by Top-100 Strength Score · positional scores are rank-weighted within each Top-25 pool</div>
+      </div>
+      <span class="badge ${live?"live":"locked"}">${live?"LIVE / UNLOCKED":"LOCKED"}</span>
+    </div>
+    <div class="tablebox">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Manager</th>
+            <th>QB</th>
+            <th>RB</th>
+            <th>WR</th>
+            <th>TE</th>
+            <th>Top-100 Strength</th>
+            <th>Top-100 Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ranked.map(rowHtml).join("")}
+          ${fa ? rowHtml({...fa,rank:null}) : ""}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
 function renderHistory(){
   const index=selectedLeagueIndex();
   $("history").innerHTML=CATEGORY_ORDER.map(cat=>historyTable(cat,index)).join("");
@@ -740,6 +846,7 @@ function lockSelected(){
   history.updated_at=new Date().toISOString();
   previewCache.delete(previewKey(index,week));
   renderPreview();
+  renderStrengthSummary();
   renderHistory();
   downloadHistory();
   $("status").textContent=`Week ${week} locked in the working copy. The updated strength-history.json was downloaded — replace the repository copy to make it permanent.`;
@@ -754,6 +861,7 @@ function unlockSelected(){
   delete history.leagues[id].weeks[String(week)];
   history.updated_at=new Date().toISOString();
   renderPreview();
+  renderStrengthSummary();
   renderHistory();
   downloadHistory();
   $("status").textContent=`Week ${week} unlocked. Updated JSON downloaded.`;
@@ -836,6 +944,7 @@ async function refreshAll(){
     updateLeagueOptions();
     updateWeekOptions();
     renderPreview();
+    renderStrengthSummary();
     renderHistory();
     updateButtons();
     $("status").textContent=`NFL ${currentSeason} · current Week ${currentWeek} · ${historyMsg}. Choose a week and Calculate Week.`;
@@ -845,8 +954,8 @@ async function refreshAll(){
   }
 }
 
-$("leagueSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
-$("weekSelect").addEventListener("change",()=>{ renderPreview(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("leagueSelect").addEventListener("change",()=>{ renderPreview(); renderStrengthSummary(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
+$("weekSelect").addEventListener("change",()=>{ renderPreview(); renderStrengthSummary(); renderHistory(); updateButtons(); $("audit").style.display="none"; });
 $("metricSelect").addEventListener("change",()=>{ renderHistory(); $("audit").style.display="none"; });
 $("refresh").addEventListener("click",refreshAll);
 $("calculate").addEventListener("click",()=>calculateSelected(true));
@@ -863,6 +972,7 @@ $("importFile").addEventListener("change",async e=>{
     history=data;
     previewCache=new Map();
     renderPreview();
+    renderStrengthSummary();
     renderHistory();
     updateButtons();
     $("status").textContent=`Imported ${file.name} into the working copy.`;
