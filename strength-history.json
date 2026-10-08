@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-07T02:47:36.627Z",
+  "updated_at": "2026-10-08T17:17:46.806Z",
   "leagues": {
     "1399909125441224704": {
       "league_name": "Steel City Bangers",
@@ -8,11 +8,21 @@
         "4": {
           "season": 2026,
           "week": 4,
-          "calculated_at": "2026-10-07T02:45:11.094Z",
+          "calculated_at": "2026-10-08T17:17:13.823Z",
           "league_id": "1399909125441224704",
           "league_name": "Steel City Bangers",
           "basis": "season_to_date_ppg",
+          "methodology_version": 2,
+          "ranking_limits": {
+            "QB": 25,
+            "RB": 25,
+            "WR": 25,
+            "TE": 25
+          },
           "exclude_reserve": true,
+          "minimum_games_required": 3,
+          "minimum_games_rule": "ceil(60% of weeks elapsed), capped at 4 games",
+          "strength_score_rule": "#1=25, #2=24, ... #25=1 within each position",
           "roster_snapshot_note": "Ownership and reserve/IR status reflect the Sleeper roster state when this week was calculated.",
           "rows": [
             {
@@ -96,95 +106,214 @@
           ],
           "counts": {
             "roster:5": {
-              "QB": 1,
+              "QB": 2,
               "RB": 2,
               "WR": 4,
-              "TE": 1,
-              "RBWR": 6
+              "TE": 3,
+              "RBWR": 6,
+              "ALL4": 11
             },
             "roster:2": {
               "QB": 2,
               "RB": 2,
               "WR": 3,
-              "TE": 1,
-              "RBWR": 5
+              "TE": 2,
+              "RBWR": 5,
+              "ALL4": 9
             },
             "roster:8": {
               "QB": 2,
               "RB": 2,
               "WR": 2,
               "TE": 0,
-              "RBWR": 4
+              "RBWR": 4,
+              "ALL4": 6
             },
             "roster:10": {
               "QB": 2,
               "RB": 2,
               "WR": 2,
-              "TE": 1,
-              "RBWR": 4
+              "TE": 2,
+              "RBWR": 4,
+              "ALL4": 8
             },
             "roster:9": {
-              "QB": 2,
+              "QB": 3,
               "RB": 2,
               "WR": 0,
               "TE": 2,
-              "RBWR": 2
+              "RBWR": 2,
+              "ALL4": 7
             },
             "roster:6": {
               "QB": 1,
               "RB": 1,
               "WR": 4,
-              "TE": 1,
-              "RBWR": 5
+              "TE": 2,
+              "RBWR": 5,
+              "ALL4": 8
             },
             "roster:11": {
-              "QB": 1,
+              "QB": 2,
               "RB": 3,
               "WR": 1,
-              "TE": 2,
-              "RBWR": 4
+              "TE": 3,
+              "RBWR": 4,
+              "ALL4": 9
             },
             "roster:4": {
               "QB": 3,
               "RB": 3,
               "WR": 0,
               "TE": 3,
-              "RBWR": 3
+              "RBWR": 3,
+              "ALL4": 9
             },
             "roster:7": {
-              "QB": 0,
+              "QB": 2,
               "RB": 2,
               "WR": 2,
               "TE": 2,
-              "RBWR": 4
+              "RBWR": 4,
+              "ALL4": 8
             },
             "roster:1": {
-              "QB": 1,
+              "QB": 2,
               "RB": 1,
               "WR": 3,
-              "TE": 1,
-              "RBWR": 4
+              "TE": 2,
+              "RBWR": 4,
+              "ALL4": 8
             },
             "roster:12": {
-              "QB": 0,
+              "QB": 1,
               "RB": 3,
-              "WR": 2,
+              "WR": 1,
               "TE": 1,
-              "RBWR": 5
+              "RBWR": 4,
+              "ALL4": 6
             },
             "roster:3": {
               "QB": 2,
               "RB": 2,
               "WR": 2,
-              "TE": 3,
-              "RBWR": 4
+              "TE": 2,
+              "RBWR": 4,
+              "ALL4": 8
             },
             "FA": {
               "QB": 1,
               "RB": 0,
-              "WR": 0,
+              "WR": 1,
+              "TE": 1,
+              "RBWR": 1,
+              "ALL4": 3
+            }
+          },
+          "strength_scores": {
+            "roster:5": {
+              "QB": 22,
+              "RB": 23,
+              "WR": 44,
+              "TE": 28,
+              "RBWR": 67,
+              "ALL4": 117
+            },
+            "roster:2": {
+              "QB": 17,
+              "RB": 29,
+              "WR": 59,
+              "TE": 22,
+              "RBWR": 88,
+              "ALL4": 127
+            },
+            "roster:8": {
+              "QB": 27,
+              "RB": 27,
+              "WR": 28,
               "TE": 0,
-              "RBWR": 0
+              "RBWR": 55,
+              "ALL4": 82
+            },
+            "roster:10": {
+              "QB": 43,
+              "RB": 26,
+              "WR": 30,
+              "TE": 19,
+              "RBWR": 56,
+              "ALL4": 118
+            },
+            "roster:9": {
+              "QB": 36,
+              "RB": 49,
+              "WR": 0,
+              "TE": 40,
+              "RBWR": 49,
+              "ALL4": 125
+            },
+            "roster:6": {
+              "QB": 17,
+              "RB": 16,
+              "WR": 62,
+              "TE": 31,
+              "RBWR": 78,
+              "ALL4": 126
+            },
+            "roster:11": {
+              "QB": 26,
+              "RB": 34,
+              "WR": 9,
+              "TE": 25,
+              "RBWR": 43,
+              "ALL4": 94
+            },
+            "roster:4": {
+              "QB": 59,
+              "RB": 34,
+              "WR": 0,
+              "TE": 58,
+              "RBWR": 34,
+              "ALL4": 151
+            },
+            "roster:7": {
+              "QB": 11,
+              "RB": 27,
+              "WR": 4,
+              "TE": 25,
+              "RBWR": 31,
+              "ALL4": 67
+            },
+            "roster:1": {
+              "QB": 21,
+              "RB": 14,
+              "WR": 39,
+              "TE": 25,
+              "RBWR": 53,
+              "ALL4": 99
+            },
+            "roster:12": {
+              "QB": 9,
+              "RB": 27,
+              "WR": 19,
+              "TE": 24,
+              "RBWR": 46,
+              "ALL4": 79
+            },
+            "roster:3": {
+              "QB": 36,
+              "RB": 19,
+              "WR": 29,
+              "TE": 26,
+              "RBWR": 48,
+              "ALL4": 110
+            },
+            "FA": {
+              "QB": 1,
+              "RB": 0,
+              "WR": 2,
+              "TE": 2,
+              "RBWR": 2,
+              "ALL4": 5
             }
           },
           "rankings": {
@@ -226,18 +355,6 @@
                 "rank": 3
               },
               {
-                "player_id": "11560",
-                "name": "Caleb Williams",
-                "nfl_team": "CHI",
-                "position": "QB",
-                "ppg": 22.49,
-                "total": 44.98,
-                "games": 2,
-                "owner_key": "roster:2",
-                "owner_label": "chud1986",
-                "rank": 4
-              },
-              {
                 "player_id": "3163",
                 "name": "Jared Goff",
                 "nfl_team": "DET",
@@ -247,7 +364,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "12545",
@@ -259,7 +376,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "lansberry16",
-                "rank": 6
+                "rank": 5
               },
               {
                 "player_id": "4046",
@@ -271,7 +388,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "jcavallo75",
-                "rank": 7
+                "rank": 6
               },
               {
                 "player_id": "3294",
@@ -283,7 +400,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "Tanknox14",
-                "rank": 8
+                "rank": 7
               },
               {
                 "player_id": "4881",
@@ -295,7 +412,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 9
+                "rank": 8
               },
               {
                 "player_id": "1166",
@@ -307,7 +424,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "Norman13",
-                "rank": 10
+                "rank": 9
               },
               {
                 "player_id": "6770",
@@ -319,19 +436,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "ElFaith11",
-                "rank": 11
-              },
-              {
-                "player_id": "5854",
-                "name": "Drew Lock",
-                "nfl_team": "SEA",
-                "position": "QB",
-                "ppg": 17.09,
-                "total": 34.18,
-                "games": 2,
-                "owner_key": "FA",
-                "owner_label": "FA",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "9758",
@@ -343,7 +448,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "Tanknox14",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "6904",
@@ -355,7 +460,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "4017",
@@ -367,7 +472,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "chud1986",
-                "rank": 15
+                "rank": 13
               },
               {
                 "player_id": "6804",
@@ -379,7 +484,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "bkluchurosky",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "7523",
@@ -391,19 +496,127 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "ElFaith11",
+                "rank": 15
+              },
+              {
+                "player_id": "96",
+                "name": "Aaron Rodgers",
+                "nfl_team": "PIT",
+                "position": "QB",
+                "ppg": 15.59,
+                "total": 62.36,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "bkluchurosky",
+                "rank": 16
+              },
+              {
+                "player_id": "421",
+                "name": "Matthew Stafford",
+                "nfl_team": "LAR",
+                "position": "QB",
+                "ppg": 15.415,
+                "total": 61.66,
+                "games": 4,
+                "owner_key": "roster:12",
+                "owner_label": "tford123",
                 "rank": 17
               },
               {
-                "player_id": "11566",
-                "name": "Jayden Daniels",
-                "nfl_team": "WAS",
+                "player_id": "1373",
+                "name": "Geno Smith",
+                "nfl_team": "NYJ",
                 "position": "QB",
-                "ppg": 16.2,
-                "total": 32.4,
-                "games": 2,
+                "ppg": 14.92,
+                "total": 59.68,
+                "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "lansberry16",
                 "rank": 18
+              },
+              {
+                "player_id": "3257",
+                "name": "Jacoby Brissett",
+                "nfl_team": "ARI",
+                "position": "QB",
+                "ppg": 14.755,
+                "total": 59.02,
+                "games": 4,
+                "owner_key": "roster:9",
+                "owner_label": "lansberry16",
+                "rank": 19
+              },
+              {
+                "player_id": "11563",
+                "name": "Bo Nix",
+                "nfl_team": "DEN",
+                "position": "QB",
+                "ppg": 14.315,
+                "total": 57.26,
+                "games": 4,
+                "owner_key": "roster:7",
+                "owner_label": "taylorantisdel",
+                "rank": 20
+              },
+              {
+                "player_id": "12522",
+                "name": "Cam Ward",
+                "nfl_team": "TEN",
+                "position": "QB",
+                "ppg": 14.185,
+                "total": 56.74,
+                "games": 4,
+                "owner_key": "roster:7",
+                "owner_label": "taylorantisdel",
+                "rank": 21
+              },
+              {
+                "player_id": "4943",
+                "name": "Sam Darnold",
+                "nfl_team": "SEA",
+                "position": "QB",
+                "ppg": 13.833,
+                "total": 41.5,
+                "games": 3,
+                "owner_key": "roster:2",
+                "owner_label": "chud1986",
+                "rank": 22
+              },
+              {
+                "player_id": "11564",
+                "name": "Drake Maye",
+                "nfl_team": "NE",
+                "position": "QB",
+                "ppg": 12.24,
+                "total": 48.96,
+                "games": 4,
+                "owner_key": "roster:1",
+                "owner_label": "tfett23",
+                "rank": 23
+              },
+              {
+                "player_id": "4892",
+                "name": "Baker Mayfield",
+                "nfl_team": "TB",
+                "position": "QB",
+                "ppg": 11.7,
+                "total": 35.1,
+                "games": 3,
+                "owner_key": "roster:11",
+                "owner_label": "Putt426",
+                "rank": 24
+              },
+              {
+                "player_id": "2307",
+                "name": "Marcus Mariota",
+                "nfl_team": "WAS",
+                "position": "QB",
+                "ppg": 11.5,
+                "total": 34.5,
+                "games": 3,
+                "owner_key": "FA",
+                "owner_label": "FA",
+                "rank": 25
               }
             ],
             "RB": [
@@ -734,18 +947,6 @@
                 "rank": 2
               },
               {
-                "player_id": "7569",
-                "name": "Nico Collins",
-                "nfl_team": "HOU",
-                "position": "WR",
-                "ppg": 22.5,
-                "total": 45,
-                "games": 2,
-                "owner_key": "roster:7",
-                "owner_label": "taylorantisdel",
-                "rank": 3
-              },
-              {
                 "player_id": "9997",
                 "name": "Zay Flowers",
                 "nfl_team": "BAL",
@@ -755,7 +956,7 @@
                 "games": 3,
                 "owner_key": "roster:10",
                 "owner_label": "jcavallo75",
-                "rank": 4
+                "rank": 3
               },
               {
                 "player_id": "7547",
@@ -767,7 +968,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "chud1986",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "8144",
@@ -779,19 +980,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "chud1986",
-                "rank": 6
-              },
-              {
-                "player_id": "9493",
-                "name": "Puka Nacua",
-                "nfl_team": "LAR",
-                "position": "WR",
-                "ppg": 17.15,
-                "total": 34.3,
-                "games": 2,
-                "owner_key": "roster:12",
-                "owner_label": "tford123",
-                "rank": 7
+                "rank": 5
               },
               {
                 "player_id": "8167",
@@ -803,7 +992,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "ElFaith11",
-                "rank": 8
+                "rank": 6
               },
               {
                 "player_id": "2133",
@@ -815,7 +1004,7 @@
                 "games": 4,
                 "owner_key": "roster:12",
                 "owner_label": "tford123",
-                "rank": 9
+                "rank": 7
               },
               {
                 "player_id": "12526",
@@ -827,7 +1016,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "Norman13",
-                "rank": 10
+                "rank": 8
               },
               {
                 "player_id": "6801",
@@ -839,7 +1028,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 11
+                "rank": 9
               },
               {
                 "player_id": "11646",
@@ -851,7 +1040,7 @@
                 "games": 3,
                 "owner_key": "roster:2",
                 "owner_label": "chud1986",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "7525",
@@ -863,7 +1052,7 @@
                 "games": 3,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "6794",
@@ -875,7 +1064,7 @@
                 "games": 3,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "8146",
@@ -887,7 +1076,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "Norman13",
-                "rank": 15
+                "rank": 13
               },
               {
                 "player_id": "5872",
@@ -899,7 +1088,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "8112",
@@ -911,7 +1100,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "bkluchurosky",
-                "rank": 17
+                "rank": 15
               },
               {
                 "player_id": "13346",
@@ -923,7 +1112,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 18
+                "rank": 16
               },
               {
                 "player_id": "7564",
@@ -935,7 +1124,7 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "Putt426",
-                "rank": 19
+                "rank": 17
               },
               {
                 "player_id": "12501",
@@ -947,7 +1136,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "ElFaith11",
-                "rank": 20
+                "rank": 18
               },
               {
                 "player_id": "11834",
@@ -959,7 +1148,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "jcavallo75",
-                "rank": 21
+                "rank": 19
               },
               {
                 "player_id": "10232",
@@ -971,7 +1160,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "Norman13",
-                "rank": 22
+                "rank": 20
               },
               {
                 "player_id": "9487",
@@ -983,7 +1172,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "bkluchurosky",
-                "rank": 23
+                "rank": 21
               },
               {
                 "player_id": "2449",
@@ -995,7 +1184,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "bkluchurosky",
-                "rank": 24
+                "rank": 22
               },
               {
                 "player_id": "2216",
@@ -1007,22 +1196,34 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "taylorantisdel",
+                "rank": 23
+              },
+              {
+                "player_id": "8188",
+                "name": "Tyquan Thornton",
+                "nfl_team": "KC",
+                "position": "WR",
+                "ppg": 9.85,
+                "total": 39.4,
+                "games": 4,
+                "owner_key": "FA",
+                "owner_label": "FA",
+                "rank": 24
+              },
+              {
+                "player_id": "11630",
+                "name": "Roman Wilson",
+                "nfl_team": "PIT",
+                "position": "WR",
+                "ppg": 9.75,
+                "total": 39,
+                "games": 4,
+                "owner_key": "roster:7",
+                "owner_label": "taylorantisdel",
                 "rank": 25
               }
             ],
             "TE": [
-              {
-                "player_id": "11604",
-                "name": "Brock Bowers",
-                "nfl_team": "LV",
-                "position": "TE",
-                "ppg": 24.1,
-                "total": 48.2,
-                "games": 2,
-                "owner_key": "roster:7",
-                "owner_label": "taylorantisdel",
-                "rank": 1
-              },
               {
                 "player_id": "8130",
                 "name": "Trey McBride",
@@ -1033,7 +1234,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "Norman13",
-                "rank": 2
+                "rank": 1
               },
               {
                 "player_id": "4217",
@@ -1045,7 +1246,7 @@
                 "games": 4,
                 "owner_key": "roster:12",
                 "owner_label": "tford123",
-                "rank": 3
+                "rank": 2
               },
               {
                 "player_id": "7002",
@@ -1057,7 +1258,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "Tanknox14",
-                "rank": 4
+                "rank": 3
               },
               {
                 "player_id": "10859",
@@ -1069,7 +1270,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "Tanknox14",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "8131",
@@ -1081,7 +1282,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "lansberry16",
-                "rank": 6
+                "rank": 5
               },
               {
                 "player_id": "1466",
@@ -1093,7 +1294,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "bkluchurosky",
-                "rank": 7
+                "rank": 6
               },
               {
                 "player_id": "12506",
@@ -1105,19 +1306,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "lansberry16",
-                "rank": 8
-              },
-              {
-                "player_id": "5022",
-                "name": "Dallas Goedert",
-                "nfl_team": "PHI",
-                "position": "TE",
-                "ppg": 12.55,
-                "total": 25.1,
-                "games": 2,
-                "owner_key": "roster:3",
-                "owner_label": "Zeroblue",
-                "rank": 9
+                "rank": 7
               },
               {
                 "player_id": "5844",
@@ -1129,7 +1318,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "chud1986",
-                "rank": 10
+                "rank": 8
               },
               {
                 "player_id": "12518",
@@ -1141,7 +1330,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 11
+                "rank": 9
               },
               {
                 "player_id": "10236",
@@ -1153,7 +1342,7 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "taylorantisdel",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "5857",
@@ -1165,7 +1354,7 @@
                 "games": 3,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "4993",
@@ -1177,7 +1366,7 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "Putt426",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "9482",
@@ -1189,7 +1378,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "Tanknox14",
-                "rank": 15
+                "rank": 13
               },
               {
                 "player_id": "5001",
@@ -1201,7 +1390,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "jcavallo75",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "2505",
@@ -1213,7 +1402,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "Zeroblue",
-                "rank": 17
+                "rank": 15
               },
               {
                 "player_id": "5012",
@@ -1225,11 +1414,119 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "Putt426",
+                "rank": 16
+              },
+              {
+                "player_id": "7600",
+                "name": "Pat Freiermuth",
+                "nfl_team": "PIT",
+                "position": "TE",
+                "ppg": 9.7,
+                "total": 38.8,
+                "games": 4,
+                "owner_key": "roster:7",
+                "owner_label": "taylorantisdel",
+                "rank": 17
+              },
+              {
+                "player_id": "13330",
+                "name": "Kenyon Sadiq",
+                "nfl_team": "NYJ",
+                "position": "TE",
+                "ppg": 9.65,
+                "total": 38.6,
+                "games": 4,
+                "owner_key": "roster:1",
+                "owner_label": "tfett23",
                 "rank": 18
+              },
+              {
+                "player_id": "9484",
+                "name": "Tucker Kraft",
+                "nfl_team": "GB",
+                "position": "TE",
+                "ppg": 9.325,
+                "total": 37.3,
+                "games": 4,
+                "owner_key": "roster:10",
+                "owner_label": "jcavallo75",
+                "rank": 19
+              },
+              {
+                "player_id": "9480",
+                "name": "Brenton Strange",
+                "nfl_team": "JAX",
+                "position": "TE",
+                "ppg": 9.175,
+                "total": 36.7,
+                "games": 4,
+                "owner_key": "roster:6",
+                "owner_label": "Norman13",
+                "rank": 20
+              },
+              {
+                "player_id": "8110",
+                "name": "Jake Ferguson",
+                "nfl_team": "DAL",
+                "position": "TE",
+                "ppg": 9.075,
+                "total": 36.3,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "bkluchurosky",
+                "rank": 21
+              },
+              {
+                "player_id": "3271",
+                "name": "Tyler Higbee",
+                "nfl_team": "LAR",
+                "position": "TE",
+                "ppg": 8.275,
+                "total": 33.1,
+                "games": 4,
+                "owner_key": "roster:2",
+                "owner_label": "chud1986",
+                "rank": 22
+              },
+              {
+                "player_id": "8111",
+                "name": "Cade Otton",
+                "nfl_team": "TB",
+                "position": "TE",
+                "ppg": 7.675,
+                "total": 30.7,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "bkluchurosky",
+                "rank": 23
+              },
+              {
+                "player_id": "9479",
+                "name": "Darnell Washington",
+                "nfl_team": "PIT",
+                "position": "TE",
+                "ppg": 6.725,
+                "total": 26.9,
+                "games": 4,
+                "owner_key": "FA",
+                "owner_label": "FA",
+                "rank": 24
+              },
+              {
+                "player_id": "3214",
+                "name": "Hunter Henry",
+                "nfl_team": "NE",
+                "position": "TE",
+                "ppg": 6.625,
+                "total": 26.5,
+                "games": 4,
+                "owner_key": "roster:11",
+                "owner_label": "Putt426",
+                "rank": 25
               }
             ]
           },
-          "locked_at": "2026-10-07T02:47:03.628Z"
+          "locked_at": "2026-10-08T17:17:25.172Z"
         }
       }
     },
@@ -1239,11 +1536,21 @@
         "4": {
           "season": 2026,
           "week": 4,
-          "calculated_at": "2026-10-07T02:47:20.273Z",
+          "calculated_at": "2026-10-08T17:17:41.049Z",
           "league_id": "1399913391677554688",
           "league_name": "Steel City Bombers",
           "basis": "season_to_date_ppg",
+          "methodology_version": 2,
+          "ranking_limits": {
+            "QB": 25,
+            "RB": 25,
+            "WR": 25,
+            "TE": 25
+          },
           "exclude_reserve": true,
+          "minimum_games_required": 3,
+          "minimum_games_rule": "ceil(60% of weeks elapsed), capped at 4 games",
+          "strength_score_rule": "#1=25, #2=24, ... #25=1 within each position",
           "roster_snapshot_note": "Ownership and reserve/IR status reflect the Sleeper roster state when this week was calculated.",
           "rows": [
             {
@@ -1327,95 +1634,214 @@
           ],
           "counts": {
             "roster:6": {
-              "QB": 1,
-              "RB": 2,
-              "WR": 2,
-              "TE": 1,
-              "RBWR": 4
-            },
-            "roster:4": {
-              "QB": 1,
-              "RB": 1,
-              "WR": 3,
-              "TE": 1,
-              "RBWR": 4
-            },
-            "roster:12": {
-              "QB": 3,
-              "RB": 2,
-              "WR": 1,
-              "TE": 1,
-              "RBWR": 3
-            },
-            "roster:3": {
-              "QB": 1,
-              "RB": 1,
-              "WR": 3,
-              "TE": 3,
-              "RBWR": 4
-            },
-            "roster:10": {
-              "QB": 1,
+              "QB": 2,
               "RB": 2,
               "WR": 2,
               "TE": 2,
-              "RBWR": 4
+              "RBWR": 4,
+              "ALL4": 8
+            },
+            "roster:4": {
+              "QB": 2,
+              "RB": 1,
+              "WR": 3,
+              "TE": 1,
+              "RBWR": 4,
+              "ALL4": 7
+            },
+            "roster:12": {
+              "QB": 2,
+              "RB": 2,
+              "WR": 1,
+              "TE": 0,
+              "RBWR": 3,
+              "ALL4": 5
+            },
+            "roster:3": {
+              "QB": 2,
+              "RB": 1,
+              "WR": 2,
+              "TE": 3,
+              "RBWR": 3,
+              "ALL4": 8
+            },
+            "roster:10": {
+              "QB": 2,
+              "RB": 2,
+              "WR": 2,
+              "TE": 3,
+              "RBWR": 4,
+              "ALL4": 9
             },
             "roster:7": {
-              "QB": 1,
+              "QB": 2,
               "RB": 3,
               "WR": 2,
               "TE": 2,
-              "RBWR": 5
+              "RBWR": 5,
+              "ALL4": 9
             },
             "roster:5": {
               "QB": 2,
               "RB": 3,
               "WR": 0,
-              "TE": 1,
-              "RBWR": 3
+              "TE": 4,
+              "RBWR": 3,
+              "ALL4": 9
             },
             "roster:11": {
-              "QB": 2,
+              "QB": 3,
               "RB": 1,
-              "WR": 3,
-              "TE": 1,
-              "RBWR": 4
+              "WR": 2,
+              "TE": 2,
+              "RBWR": 3,
+              "ALL4": 8
             },
             "roster:9": {
-              "QB": 0,
+              "QB": 2,
               "RB": 2,
-              "WR": 4,
-              "TE": 0,
-              "RBWR": 6
+              "WR": 5,
+              "TE": 1,
+              "RBWR": 7,
+              "ALL4": 10
             },
             "roster:1": {
               "QB": 2,
               "RB": 2,
               "WR": 1,
-              "TE": 2,
-              "RBWR": 3
+              "TE": 3,
+              "RBWR": 3,
+              "ALL4": 8
             },
             "roster:2": {
-              "QB": 1,
+              "QB": 2,
               "RB": 3,
               "WR": 2,
-              "TE": 1,
-              "RBWR": 5
+              "TE": 2,
+              "RBWR": 5,
+              "ALL4": 9
             },
             "roster:8": {
               "QB": 2,
               "RB": 3,
               "WR": 2,
               "TE": 1,
-              "RBWR": 5
+              "RBWR": 5,
+              "ALL4": 8
             },
             "FA": {
-              "QB": 1,
+              "QB": 0,
               "RB": 0,
+              "WR": 1,
+              "TE": 1,
+              "RBWR": 1,
+              "ALL4": 2
+            }
+          },
+          "strength_scores": {
+            "roster:6": {
+              "QB": 29,
+              "RB": 27,
+              "WR": 31,
+              "TE": 30,
+              "RBWR": 58,
+              "ALL4": 117
+            },
+            "roster:4": {
+              "QB": 26,
+              "RB": 13,
+              "WR": 32,
+              "TE": 5,
+              "RBWR": 45,
+              "ALL4": 76
+            },
+            "roster:12": {
+              "QB": 29,
+              "RB": 39,
+              "WR": 25,
+              "TE": 0,
+              "RBWR": 64,
+              "ALL4": 93
+            },
+            "roster:3": {
+              "QB": 32,
+              "RB": 3,
+              "WR": 25,
+              "TE": 55,
+              "RBWR": 28,
+              "ALL4": 115
+            },
+            "roster:10": {
+              "QB": 17,
+              "RB": 39,
+              "WR": 30,
+              "TE": 37,
+              "RBWR": 69,
+              "ALL4": 123
+            },
+            "roster:7": {
+              "QB": 13,
+              "RB": 32,
+              "WR": 29,
+              "TE": 41,
+              "RBWR": 61,
+              "ALL4": 115
+            },
+            "roster:5": {
+              "QB": 35,
+              "RB": 37,
               "WR": 0,
-              "TE": 2,
-              "RBWR": 0
+              "TE": 21,
+              "RBWR": 37,
+              "ALL4": 93
+            },
+            "roster:11": {
+              "QB": 23,
+              "RB": 2,
+              "WR": 33,
+              "TE": 13,
+              "RBWR": 35,
+              "ALL4": 71
+            },
+            "roster:9": {
+              "QB": 8,
+              "RB": 16,
+              "WR": 59,
+              "TE": 4,
+              "RBWR": 75,
+              "ALL4": 87
+            },
+            "roster:1": {
+              "QB": 45,
+              "RB": 30,
+              "WR": 24,
+              "TE": 59,
+              "RBWR": 54,
+              "ALL4": 158
+            },
+            "roster:2": {
+              "QB": 24,
+              "RB": 48,
+              "WR": 15,
+              "TE": 26,
+              "RBWR": 63,
+              "ALL4": 113
+            },
+            "roster:8": {
+              "QB": 44,
+              "RB": 39,
+              "WR": 20,
+              "TE": 19,
+              "RBWR": 59,
+              "ALL4": 122
+            },
+            "FA": {
+              "QB": 0,
+              "RB": 0,
+              "WR": 2,
+              "TE": 15,
+              "RBWR": 2,
+              "ALL4": 17
             }
           },
           "rankings": {
@@ -1457,18 +1883,6 @@
                 "rank": 3
               },
               {
-                "player_id": "11560",
-                "name": "Caleb Williams",
-                "nfl_team": "CHI",
-                "position": "QB",
-                "ppg": 22.49,
-                "total": 44.98,
-                "games": 2,
-                "owner_key": "roster:12",
-                "owner_label": "DVasbinder",
-                "rank": 4
-              },
-              {
                 "player_id": "3163",
                 "name": "Jared Goff",
                 "nfl_team": "DET",
@@ -1478,7 +1892,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "dfett23",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "12545",
@@ -1490,7 +1904,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 6
+                "rank": 5
               },
               {
                 "player_id": "4046",
@@ -1502,7 +1916,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "Nbaughman87",
-                "rank": 7
+                "rank": 6
               },
               {
                 "player_id": "3294",
@@ -1514,7 +1928,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "Vrabelscool",
-                "rank": 8
+                "rank": 7
               },
               {
                 "player_id": "4881",
@@ -1526,7 +1940,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "thimes",
-                "rank": 9
+                "rank": 8
               },
               {
                 "player_id": "1166",
@@ -1538,7 +1952,7 @@
                 "games": 4,
                 "owner_key": "roster:12",
                 "owner_label": "DVasbinder",
-                "rank": 10
+                "rank": 9
               },
               {
                 "player_id": "6770",
@@ -1550,19 +1964,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "DiabeatusPaul",
-                "rank": 11
-              },
-              {
-                "player_id": "5854",
-                "name": "Drew Lock",
-                "nfl_team": "SEA",
-                "position": "QB",
-                "ppg": 17.09,
-                "total": 34.18,
-                "games": 2,
-                "owner_key": "FA",
-                "owner_label": "FA",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "9758",
@@ -1574,7 +1976,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "Nbaughman87",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "6904",
@@ -1586,7 +1988,7 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "RipC",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "4017",
@@ -1598,7 +2000,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "Greg020",
-                "rank": 15
+                "rank": 13
               },
               {
                 "player_id": "6804",
@@ -1610,7 +2012,7 @@
                 "games": 4,
                 "owner_key": "roster:12",
                 "owner_label": "DVasbinder",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "7523",
@@ -1622,19 +2024,127 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "JLF08",
+                "rank": 15
+              },
+              {
+                "player_id": "96",
+                "name": "Aaron Rodgers",
+                "nfl_team": "PIT",
+                "position": "QB",
+                "ppg": 15.59,
+                "total": 62.36,
+                "games": 4,
+                "owner_key": "roster:4",
+                "owner_label": "DiabeatusPaul",
+                "rank": 16
+              },
+              {
+                "player_id": "421",
+                "name": "Matthew Stafford",
+                "nfl_team": "LAR",
+                "position": "QB",
+                "ppg": 15.415,
+                "total": 61.66,
+                "games": 4,
+                "owner_key": "roster:3",
+                "owner_label": "eober96",
                 "rank": 17
               },
               {
-                "player_id": "11566",
-                "name": "Jayden Daniels",
-                "nfl_team": "WAS",
+                "player_id": "1373",
+                "name": "Geno Smith",
+                "nfl_team": "NYJ",
                 "position": "QB",
-                "ppg": 16.2,
-                "total": 32.4,
-                "games": 2,
+                "ppg": 14.92,
+                "total": 59.68,
+                "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "RipC",
                 "rank": 18
+              },
+              {
+                "player_id": "3257",
+                "name": "Jacoby Brissett",
+                "nfl_team": "ARI",
+                "position": "QB",
+                "ppg": 14.755,
+                "total": 59.02,
+                "games": 4,
+                "owner_key": "roster:6",
+                "owner_label": "dfett23",
+                "rank": 19
+              },
+              {
+                "player_id": "11563",
+                "name": "Bo Nix",
+                "nfl_team": "DEN",
+                "position": "QB",
+                "ppg": 14.315,
+                "total": 57.26,
+                "games": 4,
+                "owner_key": "roster:2",
+                "owner_label": "thimes",
+                "rank": 20
+              },
+              {
+                "player_id": "12522",
+                "name": "Cam Ward",
+                "nfl_team": "TEN",
+                "position": "QB",
+                "ppg": 14.185,
+                "total": 56.74,
+                "games": 4,
+                "owner_key": "roster:9",
+                "owner_label": "steveboring",
+                "rank": 21
+              },
+              {
+                "player_id": "4943",
+                "name": "Sam Darnold",
+                "nfl_team": "SEA",
+                "position": "QB",
+                "ppg": 13.833,
+                "total": 41.5,
+                "games": 3,
+                "owner_key": "roster:10",
+                "owner_label": "Greg020",
+                "rank": 22
+              },
+              {
+                "player_id": "11564",
+                "name": "Drake Maye",
+                "nfl_team": "NE",
+                "position": "QB",
+                "ppg": 12.24,
+                "total": 48.96,
+                "games": 4,
+                "owner_key": "roster:9",
+                "owner_label": "steveboring",
+                "rank": 23
+              },
+              {
+                "player_id": "4892",
+                "name": "Baker Mayfield",
+                "nfl_team": "TB",
+                "position": "QB",
+                "ppg": 11.7,
+                "total": 35.1,
+                "games": 3,
+                "owner_key": "roster:7",
+                "owner_label": "JLF08",
+                "rank": 24
+              },
+              {
+                "player_id": "2307",
+                "name": "Marcus Mariota",
+                "nfl_team": "WAS",
+                "position": "QB",
+                "ppg": 11.5,
+                "total": 34.5,
+                "games": 3,
+                "owner_key": "roster:11",
+                "owner_label": "RipC",
+                "rank": 25
               }
             ],
             "RB": [
@@ -1965,18 +2475,6 @@
                 "rank": 2
               },
               {
-                "player_id": "7569",
-                "name": "Nico Collins",
-                "nfl_team": "HOU",
-                "position": "WR",
-                "ppg": 22.5,
-                "total": 45,
-                "games": 2,
-                "owner_key": "roster:11",
-                "owner_label": "RipC",
-                "rank": 3
-              },
-              {
                 "player_id": "9997",
                 "name": "Zay Flowers",
                 "nfl_team": "BAL",
@@ -1986,7 +2484,7 @@
                 "games": 3,
                 "owner_key": "roster:6",
                 "owner_label": "dfett23",
-                "rank": 4
+                "rank": 3
               },
               {
                 "player_id": "7547",
@@ -1998,7 +2496,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "steveboring",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "8144",
@@ -2010,19 +2508,7 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "RipC",
-                "rank": 6
-              },
-              {
-                "player_id": "9493",
-                "name": "Puka Nacua",
-                "nfl_team": "LAR",
-                "position": "WR",
-                "ppg": 17.15,
-                "total": 34.3,
-                "games": 2,
-                "owner_key": "roster:3",
-                "owner_label": "eober96",
-                "rank": 7
+                "rank": 5
               },
               {
                 "player_id": "8167",
@@ -2034,7 +2520,7 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "JLF08",
-                "rank": 8
+                "rank": 6
               },
               {
                 "player_id": "2133",
@@ -2046,7 +2532,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "steveboring",
-                "rank": 9
+                "rank": 7
               },
               {
                 "player_id": "12526",
@@ -2058,7 +2544,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "eober96",
-                "rank": 10
+                "rank": 8
               },
               {
                 "player_id": "6801",
@@ -2070,7 +2556,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "Vrabelscool",
-                "rank": 11
+                "rank": 9
               },
               {
                 "player_id": "11646",
@@ -2082,7 +2568,7 @@
                 "games": 3,
                 "owner_key": "roster:10",
                 "owner_label": "Greg020",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "7525",
@@ -2094,7 +2580,7 @@
                 "games": 3,
                 "owner_key": "roster:4",
                 "owner_label": "DiabeatusPaul",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "6794",
@@ -2106,7 +2592,7 @@
                 "games": 3,
                 "owner_key": "roster:10",
                 "owner_label": "Greg020",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "8146",
@@ -2118,7 +2604,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "DiabeatusPaul",
-                "rank": 15
+                "rank": 13
               },
               {
                 "player_id": "5872",
@@ -2130,7 +2616,7 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "RipC",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "8112",
@@ -2142,7 +2628,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "steveboring",
-                "rank": 17
+                "rank": 15
               },
               {
                 "player_id": "13346",
@@ -2154,7 +2640,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "thimes",
-                "rank": 18
+                "rank": 16
               },
               {
                 "player_id": "7564",
@@ -2166,7 +2652,7 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "JLF08",
-                "rank": 19
+                "rank": 17
               },
               {
                 "player_id": "12501",
@@ -2178,7 +2664,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "dfett23",
-                "rank": 20
+                "rank": 18
               },
               {
                 "player_id": "11834",
@@ -2190,7 +2676,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "eober96",
-                "rank": 21
+                "rank": 19
               },
               {
                 "player_id": "10232",
@@ -2202,7 +2688,7 @@
                 "games": 4,
                 "owner_key": "roster:9",
                 "owner_label": "steveboring",
-                "rank": 22
+                "rank": 20
               },
               {
                 "player_id": "9487",
@@ -2214,7 +2700,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "thimes",
-                "rank": 23
+                "rank": 21
               },
               {
                 "player_id": "2449",
@@ -2226,7 +2712,7 @@
                 "games": 4,
                 "owner_key": "roster:4",
                 "owner_label": "DiabeatusPaul",
-                "rank": 24
+                "rank": 22
               },
               {
                 "player_id": "2216",
@@ -2238,22 +2724,34 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "Vrabelscool",
+                "rank": 23
+              },
+              {
+                "player_id": "8188",
+                "name": "Tyquan Thornton",
+                "nfl_team": "KC",
+                "position": "WR",
+                "ppg": 9.85,
+                "total": 39.4,
+                "games": 4,
+                "owner_key": "FA",
+                "owner_label": "FA",
+                "rank": 24
+              },
+              {
+                "player_id": "11630",
+                "name": "Roman Wilson",
+                "nfl_team": "PIT",
+                "position": "WR",
+                "ppg": 9.75,
+                "total": 39,
+                "games": 4,
+                "owner_key": "roster:9",
+                "owner_label": "steveboring",
                 "rank": 25
               }
             ],
             "TE": [
-              {
-                "player_id": "11604",
-                "name": "Brock Bowers",
-                "nfl_team": "LV",
-                "position": "TE",
-                "ppg": 24.1,
-                "total": 48.2,
-                "games": 2,
-                "owner_key": "roster:4",
-                "owner_label": "DiabeatusPaul",
-                "rank": 1
-              },
               {
                 "player_id": "8130",
                 "name": "Trey McBride",
@@ -2264,7 +2762,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 2
+                "rank": 1
               },
               {
                 "player_id": "4217",
@@ -2276,7 +2774,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "eober96",
-                "rank": 3
+                "rank": 2
               },
               {
                 "player_id": "7002",
@@ -2288,7 +2786,7 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "JLF08",
-                "rank": 4
+                "rank": 3
               },
               {
                 "player_id": "10859",
@@ -2300,7 +2798,7 @@
                 "games": 4,
                 "owner_key": "roster:6",
                 "owner_label": "dfett23",
-                "rank": 5
+                "rank": 4
               },
               {
                 "player_id": "8131",
@@ -2312,7 +2810,7 @@
                 "games": 4,
                 "owner_key": "roster:1",
                 "owner_label": "tfett23",
-                "rank": 6
+                "rank": 5
               },
               {
                 "player_id": "1466",
@@ -2324,7 +2822,7 @@
                 "games": 4,
                 "owner_key": "roster:2",
                 "owner_label": "thimes",
-                "rank": 7
+                "rank": 6
               },
               {
                 "player_id": "12506",
@@ -2336,19 +2834,7 @@
                 "games": 4,
                 "owner_key": "roster:8",
                 "owner_label": "Vrabelscool",
-                "rank": 8
-              },
-              {
-                "player_id": "5022",
-                "name": "Dallas Goedert",
-                "nfl_team": "PHI",
-                "position": "TE",
-                "ppg": 12.55,
-                "total": 25.1,
-                "games": 2,
-                "owner_key": "roster:12",
-                "owner_label": "DVasbinder",
-                "rank": 9
+                "rank": 7
               },
               {
                 "player_id": "5844",
@@ -2360,7 +2846,7 @@
                 "games": 4,
                 "owner_key": "roster:7",
                 "owner_label": "JLF08",
-                "rank": 10
+                "rank": 8
               },
               {
                 "player_id": "12518",
@@ -2372,7 +2858,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "eober96",
-                "rank": 11
+                "rank": 9
               },
               {
                 "player_id": "10236",
@@ -2384,7 +2870,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "Greg020",
-                "rank": 12
+                "rank": 10
               },
               {
                 "player_id": "5857",
@@ -2396,7 +2882,7 @@
                 "games": 3,
                 "owner_key": "FA",
                 "owner_label": "FA",
-                "rank": 13
+                "rank": 11
               },
               {
                 "player_id": "4993",
@@ -2408,7 +2894,7 @@
                 "games": 4,
                 "owner_key": "roster:3",
                 "owner_label": "eober96",
-                "rank": 14
+                "rank": 12
               },
               {
                 "player_id": "9482",
@@ -2418,9 +2904,9 @@
                 "ppg": 10.725,
                 "total": 42.9,
                 "games": 4,
-                "owner_key": "FA",
-                "owner_label": "FA",
-                "rank": 15
+                "owner_key": "roster:1",
+                "owner_label": "tfett23",
+                "rank": 13
               },
               {
                 "player_id": "5001",
@@ -2432,7 +2918,7 @@
                 "games": 4,
                 "owner_key": "roster:10",
                 "owner_label": "Greg020",
-                "rank": 16
+                "rank": 14
               },
               {
                 "player_id": "2505",
@@ -2444,7 +2930,7 @@
                 "games": 4,
                 "owner_key": "roster:5",
                 "owner_label": "Nbaughman87",
-                "rank": 17
+                "rank": 15
               },
               {
                 "player_id": "5012",
@@ -2456,11 +2942,119 @@
                 "games": 4,
                 "owner_key": "roster:11",
                 "owner_label": "RipC",
+                "rank": 16
+              },
+              {
+                "player_id": "7600",
+                "name": "Pat Freiermuth",
+                "nfl_team": "PIT",
+                "position": "TE",
+                "ppg": 9.7,
+                "total": 38.8,
+                "games": 4,
+                "owner_key": "roster:10",
+                "owner_label": "Greg020",
+                "rank": 17
+              },
+              {
+                "player_id": "13330",
+                "name": "Kenyon Sadiq",
+                "nfl_team": "NYJ",
+                "position": "TE",
+                "ppg": 9.65,
+                "total": 38.6,
+                "games": 4,
+                "owner_key": "roster:6",
+                "owner_label": "dfett23",
                 "rank": 18
+              },
+              {
+                "player_id": "9484",
+                "name": "Tucker Kraft",
+                "nfl_team": "GB",
+                "position": "TE",
+                "ppg": 9.325,
+                "total": 37.3,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "Nbaughman87",
+                "rank": 19
+              },
+              {
+                "player_id": "9480",
+                "name": "Brenton Strange",
+                "nfl_team": "JAX",
+                "position": "TE",
+                "ppg": 9.175,
+                "total": 36.7,
+                "games": 4,
+                "owner_key": "roster:2",
+                "owner_label": "thimes",
+                "rank": 20
+              },
+              {
+                "player_id": "8110",
+                "name": "Jake Ferguson",
+                "nfl_team": "DAL",
+                "position": "TE",
+                "ppg": 9.075,
+                "total": 36.3,
+                "games": 4,
+                "owner_key": "roster:4",
+                "owner_label": "DiabeatusPaul",
+                "rank": 21
+              },
+              {
+                "player_id": "3271",
+                "name": "Tyler Higbee",
+                "nfl_team": "LAR",
+                "position": "TE",
+                "ppg": 8.275,
+                "total": 33.1,
+                "games": 4,
+                "owner_key": "roster:9",
+                "owner_label": "steveboring",
+                "rank": 22
+              },
+              {
+                "player_id": "8111",
+                "name": "Cade Otton",
+                "nfl_team": "TB",
+                "position": "TE",
+                "ppg": 7.675,
+                "total": 30.7,
+                "games": 4,
+                "owner_key": "roster:11",
+                "owner_label": "RipC",
+                "rank": 23
+              },
+              {
+                "player_id": "9479",
+                "name": "Darnell Washington",
+                "nfl_team": "PIT",
+                "position": "TE",
+                "ppg": 6.725,
+                "total": 26.9,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "Nbaughman87",
+                "rank": 24
+              },
+              {
+                "player_id": "3214",
+                "name": "Hunter Henry",
+                "nfl_team": "NE",
+                "position": "TE",
+                "ppg": 6.625,
+                "total": 26.5,
+                "games": 4,
+                "owner_key": "roster:5",
+                "owner_label": "Nbaughman87",
+                "rank": 25
               }
             ]
           },
-          "locked_at": "2026-10-07T02:47:36.627Z"
+          "locked_at": "2026-10-08T17:17:46.806Z"
         }
       }
     }
