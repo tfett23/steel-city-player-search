@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-04T03:14:49.927Z",
+  "updated_at": "2026-11-04T03:18:27.172Z",
   "leagues": {
     "1399909125441224704": {
       "league_name": "Steel City Bangers",
@@ -6100,7 +6100,7 @@
         "8": {
           "season": 2026,
           "week": 8,
-          "calculated_at": "2026-11-04T03:13:22.285Z",
+          "calculated_at": "2026-11-04T03:18:09.137Z",
           "league_id": "1399909125441224704",
           "league_name": "Steel City Bangers",
           "basis": "season_to_date_ppg",
@@ -7618,7 +7618,7 @@
               }
             ]
           },
-          "locked_at": "2026-11-04T03:14:18.630Z"
+          "locked_at": "2026-11-04T03:18:15.878Z"
         }
       }
     },
@@ -13720,7 +13720,7 @@
         "8": {
           "season": 2026,
           "week": 8,
-          "calculated_at": "2026-11-04T03:14:34.971Z",
+          "calculated_at": "2026-11-04T03:18:21.642Z",
           "league_id": "1399913391677554688",
           "league_name": "Steel City Bombers",
           "basis": "season_to_date_ppg",
@@ -15238,7 +15238,7 @@
               }
             ]
           },
-          "locked_at": "2026-11-04T03:14:49.927Z"
+          "locked_at": "2026-11-04T03:18:27.172Z"
         }
       }
     }
